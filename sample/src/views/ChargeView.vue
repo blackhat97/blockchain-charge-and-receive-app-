@@ -1,5 +1,5 @@
 <template>
-  <div class="charge-new">
+  <div class="charge-view">
     <top-bar title="청구서"></top-bar>
     <h1>청구서 보기</h1>
     <p>청구서 ID : {{ query.id }}</p>

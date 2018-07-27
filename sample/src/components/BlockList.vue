@@ -1,6 +1,6 @@
 <template>
   <div class="block-list">
-    <block-item v-bind:key="item.key" v-for="item in items" :item="item"></block-item>
+    <block-item v-bind:key="item.key" v-for="item in items" :item="item" :type="type"></block-item>
   </div>
 </template>
 
@@ -9,7 +9,7 @@ import BlockItem from '@/components/BlockItem.vue'
 
 export default {
   name: 'BlockList',
-  props: ['items'],
+  props: ['items', 'type'],
   components: {
     BlockItem
   }

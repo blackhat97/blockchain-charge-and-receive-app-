@@ -3,7 +3,7 @@
     <top-bar title="청구"></top-bar>
     <h1>청구 현황</h1>
     <plus-button link="/charge/new"></plus-button>
-    <block-list :items="chargeItems"></block-list>
+    <block-list type="charge" :items="chargeItems"></block-list>
   </div>
 </template>
 

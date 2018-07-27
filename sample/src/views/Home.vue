@@ -14,7 +14,7 @@ export default {
     return {
       rectButtonList: [
       { key: 1, title : '청구', link : '/charge' },
-      { key: 2, title : '대금', link : '/receive' }
+      { key: 2, title : '대금', link : '/payment' }
       ]
     }
   }

@@ -6,7 +6,7 @@ import About from './views/About.vue'
 import Charge from './views/Charge.vue'
 import ChargeNew from './views/ChargeNew.vue'
 import ChargeView from './views/ChargeView.vue'
-import Receive from './views/Receive.vue'
+import Payment from './views/Payment.vue'
 
 Vue.use(Router)
 
@@ -44,9 +44,9 @@ export default new Router({
       component: ChargeView
     },
     {
-      path: '/receive',
-      name: 'receive',
-      component: Receive
+      path: '/payment',
+      name: 'payment',
+      component: Payment
     },
   ]
 })

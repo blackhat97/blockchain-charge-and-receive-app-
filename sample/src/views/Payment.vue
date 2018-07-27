@@ -1,5 +1,5 @@
 <template>
-  <div class="receive">
+  <div class="payment">
     <top-bar title="대금 지급"></top-bar>
     <h1>대금 지급 현황</h1>
     <block-list :items="receiveItems"></block-list>
@@ -8,7 +8,7 @@
 
 <script>
 export default {
-  name: 'Receive',
+  name: 'Payment',
   data() {
     return {
       receiveItems: [

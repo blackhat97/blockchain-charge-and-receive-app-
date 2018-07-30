@@ -6,6 +6,7 @@
     <p>물품명 : {{ query.name }}</p>
     <p>미수납금 : {{ query.balance }} 원</p>
     <p>수금확인 : {{ query.confirm == 'true' ? '완료' : '미완료'}}</p>
+    <button v-show="query.confirm != 'true'">대금 지급</button>
   </div>
 </template>
 

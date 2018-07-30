@@ -12,12 +12,8 @@
         </select>
       </div>
       <ul class="product">
-        <ul class="item">
-          <li><input type="text" placeholder="이름"></li>
-          <li><input type="text" placeholder="수량"></li>
-          <li><input type="text" placeholder="가격"></li>
-        </ul>
-        <button>추가하기</button>
+        <component v-for="(item, index) in items" :is="item" :index="index" :items="items"></component>
+        <button type="button" @click="addItem">추가하기</button>
       </ul>
       <div class="total">총액 :
       </div>
@@ -28,6 +24,12 @@
 
 <script>
 export default {
-  name: 'ChargeNew'
+  methods: {
+    addItem: function () { this.items.push('product-items') }
+  },
+  name: 'ChargeNew',
+  data() {
+    return { items: ['product-items'] } 
+  }
 }
 </script>

@@ -6,17 +6,17 @@ OrdererOrgs:
   - Hostname: orderer0
     CommonName: "{{.Hostname}}"
 PeerOrgs:
-- Name: CompnayAOrg
-  Domain: compnay-a-org
+- Name: CompanyAOrg
+  Domain: company-a-org
   Specs:
-  - Hostname: compnay-a-peer-a
+  - Hostname: company-a-peer-1
     CommonName: "{{.Hostname}}"
-  - Hostname: compnay-a-peer-b
+  - Hostname: company-a-peer-2
     CommonName: "{{.Hostname}}"
 - Name: CompnayBOrg
-  Domain: compnay-b-org
+  Domain: company-b-org
   Specs:
-  - Hostname: compnay-b-peer-a
+  - Hostname: company-b-peer-1
     CommonName: "{{.Hostname}}"
-  - Hostname: compnay-b-peer-b
+  - Hostname: company-b-peer-2
     CommonName: "{{.Hostname}}"

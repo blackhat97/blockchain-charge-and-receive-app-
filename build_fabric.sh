@@ -30,7 +30,7 @@ echo
 echo "#################################################################"
 echo "####### Generating anchor peer update for InsuranceOrg ##########"
 echo "#################################################################"
-$BINPATH/configtxgen -profile OrgsChannel -outputAnchorPeersUpdate $CLIPATH/CompnayAOrgMSPAnchors.tx -channelID $CHANNEL_NAME -asOrg CompanyAOrgMSP
+$BINPATH/configtxgen -profile OrgsChannel -outputAnchorPeersUpdate $CLIPATH/CompnayAOrgAnchors.tx -channelID $CHANNEL_NAME -asOrg CompanyAOrgMSP
 
 echo
 echo "#################################################################"

@@ -39,7 +39,7 @@ Organizations:
     Port: 7051
 
 Orderer: &OrdererDefaults
-  OrdererType: solo
+  OrdererType: kafka
   Addresses:
   - orderer0:7050
   BatchTimeout: 2s

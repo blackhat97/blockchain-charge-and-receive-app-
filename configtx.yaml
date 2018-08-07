@@ -1,0 +1,53 @@
+---
+Profiles:
+  OrgsGenesis:
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+      - *OrdererOrg
+    Consortiums:
+      CompnayConsortium:
+        Organizations:
+        - *CompanyAOrg
+        - *CompanyBOrg
+  OrgsChannel:
+    Consortium: CompnayConsortium
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+      - *CompanyAOrg
+      - *CompanyBOrg
+
+Organizations:
+- &OrdererOrg
+  Name: OrdererOrg
+  ID: OrdererMSP
+  MSPDir: cli/peers/ordererOrganizations/orderer-org/msp
+- &CompanyAOrg
+  Name: CompanyAOrgMSP
+  ID: CompanyAOrgMSP
+  MSPDir: cli/peers/peerOrganizations/company-a-org/msp
+  AnchorPeers:
+  - Host: company-a-peer-1
+    Port: 7051
+- &CompanyBOrg
+  Name: CompanyBOrgMSP
+  ID: CompanyBOrgMSP
+  MSPDir: cli/peers/peerOrganizations/company-b-org/msp
+  AnchorPeers:
+  - Host: company-b-peer-1
+    Port: 7051
+
+Orderer: &OrdererDefaults
+  OrdererType: kafka
+  Addresses:
+  - orderer0:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+
+Application: &ApplicationDefaults
+  Organizations:

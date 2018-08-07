@@ -1,0 +1,8 @@
+#+TITLE: Block C&R binary
+
+본 명령어는 우분투 계열에서만 사용 가능합니다.
+
+* 명령어
+** Hyperledger fabric 명령어
+- configtxgen :: 아티팩트와 관련된 생성 및 설정 유틸리티
+- cryptogen :: key material을 만드는 유틸리티

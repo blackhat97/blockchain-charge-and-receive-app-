@@ -1,0 +1,168 @@
+version: '2'
+
+services:
+  company-a-ca:
+    container_name: company-a-ca
+    extends:
+      file: ./ca-base.yaml
+      service: ca-base
+    image: company-a-ca
+    ports:
+    - 7054:7054
+
+  company-b-ca:
+    container_name: company-b-ca
+    extends:
+      file: ./ca-base.yaml
+      service: ca-base
+    image: company-b-ca
+    ports:
+    - 8054:7054
+
+  company-orderer0:
+    container_name: company-orderer0
+    image: orderer
+    environment:
+    - ORDERER_GENERAL_LOGLEVEL=debug
+    - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+    - ORDERER_GENERAL_GENESISMETHOD=file
+    - ORDERER_GENERAL_GENESISFILE=/orderer/crypto/genesis.block
+    - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+    - ORDERER_GENERAL_LOCALMSPDIR=/orderer/crypto/msp
+    - ORDERER_GENERAL_TLS_ENABLED=true
+    - ORDERER_GENERAL_TLS_PRIVATEKEY=/orderer/crypto/tls/server.key
+    - ORDERER_GENERAL_TLS_CERTIFICATE=/orderer/crypto/tls/server.crt
+    - ORDERER_GENERAL_TLS_ROOTCAS=[/orderer/crypto/tls/ca.crt]
+    working_dir: /orderer
+    command: orderer
+    ports:
+    - 7050:7050
+
+  company-a-peer-1:
+    container_name: company-a-peer-1
+    extends:
+      file: ./peer-base.yaml
+      service: peer-base
+    image: company-a-peer-1
+    environment:
+    - CORE_PEER_ID=company-a-peer-1
+    - CORE_PEER_ADDRESS=company-a-peer-1:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=company-a-peer-1:7051
+    - CORE_PEER_LOCALMSPID=CompanyAOrgMSP
+    ports:
+    - 7051:7051
+    - 7053:7053
+    depends_on:
+    - company-orderer0
+
+  company-a-peer-2:
+    container_name: company-a-peer-2
+    extends:
+      file: ./peer-base.yaml
+      service: peer-base
+    image: company-a-peer-2
+    environment:
+    - CORE_PEER_ID=company-a-peer-2
+    - CORE_PEER_ADDRESS=company-a-peer-2:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=company-a-peer-2:7051
+    - CORE_PEER_LOCALMSPID=CompanyAOrgMSP
+    ports:
+    - 8051:7051
+    - 8053:7053
+    depends_on:
+    - company-orderer0
+    - company-a-peer-1
+
+  company-b-peer-1:
+    container_name: company-b-peer-1
+    extends:
+      file: ./peer-base.yaml
+      service: peer-base
+    image: company-b-peer-1
+    environment:
+    - CORE_PEER_ID=company-a-peer-1
+    - CORE_PEER_ADDRESS=company-a-peer-1:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=company-a-peer-1:7051
+    - CORE_PEER_LOCALMSPID=CompanyBOrgMSP
+    ports:
+    - 7051:7051
+    - 7053:7053
+    depends_on:
+    - company-orderer0
+
+  company-b-peer-2:
+    container_name: company-a-peer-2
+    extends:
+      file: ./peer-base.yaml
+      service: peer-base
+    image: insurance-peer
+    environment:
+    - CORE_PEER_ID=company-a-peer-2
+    - CORE_PEER_ADDRESS=company-a-peer-2:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=company-a-peer-2:7051
+    - CORE_PEER_LOCALMSPID=CompanyBOrgMSP
+    ports:
+    - 8051:7051
+    - 8053:7053
+    depends_on:
+    - company-orderer0
+    - company-b-peer-1
+
+  repairshop-peer:
+    container_name: repairshop-peer
+    extends:
+      file: ./peer-base.yaml
+      service: peer-base
+    image: repairshop-peer
+    environment:
+    - CORE_PEER_ID=repairshop-peer
+    - CORE_PEER_ADDRESS=repairshop-peer:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=repairshop-peer:7051
+    - CORE_PEER_LOCALMSPID=RepairShopOrgMSP
+    ports:
+    - 9051:7051
+    - 9053:7053
+    depends_on:
+    - orderer0
+    - insurance-peer
+    - shop-peer
+
+  police-peer:
+    container_name: police-peer
+    extends:
+      file: ./peer-base.yaml
+      service: peer-base
+    image: police-peer
+    environment:
+    - CORE_PEER_ID=police-peer
+    - CORE_PEER_ADDRESS=police-peer:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=police-peer:7051
+    - CORE_PEER_LOCALMSPID=PoliceOrgMSP
+    ports:
+    - 10051:7051
+    - 10053:7053
+    depends_on:
+    - orderer0
+    - insurance-peer
+    - shop-peer
+    - repairshop-peer
+
+  web:
+    container_name: web
+    image: web
+    environment:
+    - PORT=3000
+    - DOCKER_SOCKET_PATH=/host/var/run/docker.sock
+    - DOCKER_CCENV_IMAGE=hyperledger/fabric-ccenv:x86_64-1.1.0
+    ports:
+    - 3000:3000
+    volumes:
+    - /var/run/:/host/var/run/
+    depends_on:
+    - orderer0
+    - insurance-ca
+    - insurance-peer
+    - shop-ca
+    - shop-peer
+    - repairshop-ca
+    - repairshop-peer

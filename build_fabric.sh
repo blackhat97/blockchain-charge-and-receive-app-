@@ -70,8 +70,8 @@ cp -r $PEERS/company-b-org/peers/company-b-peer-2/tls $NODESPATH/company-b-peer-
 
 cp $CLIPATH/genesis.block $NODESPATH/orderer/crypto/
 
-COMPANY_A_CA_PATH=$NODESPATH/companyACA
-COMPANY_B_CA_PATH=$NODESPATH/companyBCA
+COMPANY_A_CA_PATH=$NODESPATH/company-a-ca
+COMPANY_B_CA_PATH=$NODESPATH/company-b-ca
 
 rm -rf $COMPANY_A_CA_PATH/ca
 rm -rf $COMPANY_A_CA_PATH/tls

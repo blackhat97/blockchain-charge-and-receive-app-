@@ -52,10 +52,10 @@ echo "#######        Generating composer card material       ##########"
 echo "#################################################################"
 
 cd $COMPANY_A_TARGET && \
-    composer card create -p $COMPANY_A_TARGET/connection.json -u PeerAdmin -c $COMPANY_A_TARGET/Admin@company-a-org-cert.pem -k $COMPANY_A_TARGET/*_sk -r PeerAdmin -r ChannelAdmin -f PeerAdmin@block-cnr-network-company-a && \
-    composer network install --card PeerAdmin@block-cnr-network-company-a.card --archiveFile $BNAPATH/block-cnr-network.bna
+    composer card create -p $COMPANY_A_TARGET/connection.json -u PeerAdmin -c $COMPANY_A_TARGET/Admin@company-a-org-cert.pem -k $COMPANY_A_TARGET/*_sk -r PeerAdmin -r ChannelAdmin -f PeerAdmin@block-cnr-network-company-a.card && \
+    composer network install --card PeerAdmin@block-cnr-network-company-a --archiveFile $BNAPATH/block-cnr-network.bna
 
 cd $COMPANY_B_TARGET && \
-    composer card create -p $COMPANY_B_TARGET/connection.json -u PeerAdmin -c $COMPANY_B_TARGET/Admin@company-b-org-cert.pem -k $COMPANY_B_TARGET/*_sk -r PeerAdmin -r ChannelAdmin -f PeerAdmin@block-cnr-network-company-b && \
-    composer network install --card PeerAdmin@block-cnr-network-company-b.card --archiveFile $BNAPATH/block-cnr-network.bna
+    composer card create -p $COMPANY_B_TARGET/connection.json -u PeerAdmin -c $COMPANY_B_TARGET/Admin@company-b-org-cert.pem -k $COMPANY_B_TARGET/*_sk -r PeerAdmin -r ChannelAdmin -f PeerAdmin@block-cnr-network-company-b.card && \
+    composer network install --card PeerAdmin@block-cnr-network-company-b --archiveFile $BNAPATH/block-cnr-network.bna
 

@@ -8,6 +8,7 @@ PROJECTPATH=$(pwd)
 PEERSPATH=$(pwd)/cli/peers
 NODESPATH=$(pwd)/nodes
 COMPOSERPATH=$(pwd)/composer
+BNAPATH=$COMPOSERPATH/bna
 PROFILEPATH=$COMPOSERPATH/profile
 TMPPATH=$COMPOSERPATH/tmp
 
@@ -46,15 +47,15 @@ cp -p $COMPANY_A_SOURCE/users/Admin@company-a-org/msp/keystore/*_sk $COMPANY_A_T
 cp -p $COMPANY_B_SOURCE/users/Admin@company-b-org/msp/signcerts/A*.pem $COMPANY_B_TARGET/
 cp -p $COMPANY_B_SOURCE/users/Admin@company-b-org/msp/keystore/*_sk $COMPANY_B_TARGET/
 
-echo "#################################################################"
+echo "#############################################r####################"
 echo "#######        Generating composer card material       ##########"
 echo "#################################################################"
 
 cd $COMPANY_A_TARGET && \
     composer card create -p $COMPANY_A_TARGET/connection.json -u PeerAdmin -c $COMPANY_A_TARGET/Admin@company-a-org-cert.pem -k $COMPANY_A_TARGET/*_sk -r PeerAdmin -r ChannelAdmin -f PeerAdmin@block-cnr-network-company-a.card && \
-    composer network install --card PeerAdmin@block-cnr-network-company-a.card --archiveFile block-cnr-network.bna
+    composer network install --card PeerAdmin@block-cnr-network-company-a.card --archiveFile $BNAPATH/block-cnr-network.bna
 
 cd $COMPANY_B_TARGET && \
     composer card create -p $COMPANY_B_TARGET/connection.json -u PeerAdmin -c $COMPANY_B_TARGET/Admin@company-b-org-cert.pem -k $COMPANY_B_TARGET/*_sk -r PeerAdmin -r ChannelAdmin -f PeerAdmin@block-cnr-network-company-b.card && \
-    composer network install --card PeerAdmin@block-cnr-network-company-b.card --archiveFile block-cnr-network.bna
+    composer network install --card PeerAdmin@block-cnr-network-company-b.card --archiveFile $BNAPATH/block-cnr-network.bna
 

@@ -1,0 +1,57 @@
+namespace org.blockchain.cnr_network
+
+concept BankAccount {
+  o String bankName
+  o Integer accountNumber
+}
+
+participant Company identified by companyId {
+  o String companyId
+  o String branchName
+  o BankAccount bankAccount
+  o String location optional
+}
+
+concept Items {
+  o String name
+  o Integer price
+  o Integer quantity
+  o Integer remain
+}
+
+enum ConfirmStatus {
+ o YES
+ o NO
+ o Depending
+}
+
+asset Bill identified by billId {
+  o String billId
+  --> Company source
+  --> Company target
+  o Items[] items
+  o String payment_date
+  o ConfirmStatus confirmStatus default="NO"
+}
+
+transaction Charge {
+  --> Bill bill
+}
+
+transaction Payment {
+  --> Bill bill
+}
+
+participant SamplePerson identified by Id {
+  o String Id
+  o String name
+}
+asset SampleAsset identified by Id {
+  o String Id
+  o Integer unit
+}
+transaction Sample {
+  o String sampleId
+  --> SampleAsset ass
+  --> SamplePerson person
+}

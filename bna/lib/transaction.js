@@ -1,16 +1,31 @@
+/* global getFactory getAssetRegistry getParticipantRegistry emit */
+const NAMESPACE = 'org.blockchain.cnr_network';
+class ResourceManager {
+  consturctor (namespace, id) {
+    this.id = id;
+    const factory = getFactory();
+    this.data = factory.newResource(namespace, id);
+  }
+
+  async add () {
+    const assetRegistry = await getAssetRegistry(this.data.getFullyQualifiedType());
+    await assetRegistry.add(this.data);
+  }
+
+  async update () {
+    const assetRegistry = await getAssetRegistry(this.data.getFullyQualifiedType());
+    await assetRegistry.update(this.data);
+  }
+}
+
 class Company {
-  constructor () {
+  constructor (companyId) {
+    const factory = getFactory();
   }
   existId (companyId) {
 
   }
   getList () {
-
-  }
-}
-
-class Bill {
-  constructor () {
 
   }
 }
@@ -21,25 +36,6 @@ class Bill {
  * @transaction
  */
 async function Charge(tx) {
-
-  console.log('charge');
-  const factory = getFactory();
-  const namespace = 'org.blockchain.cnr_network';
-
-  const charge = factory.newResource(namespace, 'Bill', tx.bill.billId);
-  charge.source = factory.newRelationship(namespace, 'Company', tx.bill.source.getIdentifier());
-  charge.target = factory.newRelationship(namespace, 'Company', tx.bill.target.getIdentifier());
-
-  charge.items = tx.items;
-
-
-  charge.payment_date = tx.bill.payment_date;
-  charge.confirmStatus = 'NO';
-
-    // save the charge
-  const assetRegistry = await getAssetRegistry(charge.getFullyQualifiedType());
-  await assetRegistry.add(charge);
-
 }
 
 /**
@@ -58,6 +54,15 @@ async function Payment (tx) {
  */
 async function Sample (tx) {
   console.log(tx);
+  const factory = getFactory();
+  const namespace = 'org.blockchain.cnr_network';
+  const ass = factory.newResource(namespace, 'SampleAsset', tx.ass.Id);
+  console.log(ass);
+  ass.unit = 5;
+
+
+  const p = await getParticipantRegistry(namespace + '.SamplePerson');
+  console.log(p.getAll());
 }
 
 async function newCompany () {

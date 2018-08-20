@@ -2,7 +2,7 @@ namespace org.blockchain.cnr_network
 
 concept BankAccount {
   o String bankName
-  o Integer accountNumber
+  o String accountNumber
 }
 
 participant Company identified by companyId {
@@ -41,6 +41,7 @@ transaction Charge {
 transaction Payment {
   --> Bill bill
 }
+
 
 participant SamplePerson identified by Id {
   o String Id

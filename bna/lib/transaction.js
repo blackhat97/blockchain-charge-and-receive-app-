@@ -28,33 +28,74 @@ class ParticipantManager {
   }
 
   async getAll () {
-    return Object.values(await this.data.getAll());
+    return await this.data.getAll();
   }
 }
 
 class Company {
   constructor (pId) {
-    this.pid = pId;
   }
   async init () {
     this.p = new ParticipantManager(NAMESPACE, 'Company');
     await this.p.init();
   }
 
-  existId (companyId) {
+  async existsId (pId) {
+    let ids = await this.getIds();
+    return ids.indexOf(pId) > -1;
   }
 
+  /* 모든 Company 정보를 리턴한다 */
   async getList () {
     return await this.p.getAll();
   }
 
+  /* 모든 Company Id를 리턴한다 */
   async getIds () {
     let data = await this.getList();
-    window.aaa = data;
-    console.log(data);
-    return data.maps(elem => elem['$identifier']);
+    return data.map(elem => elem['$identifier']);
   }
 
+  async getData (pId) {
+    if (!(await this.existsId(pId))) return false;
+    let data = await this.getList();
+    let filtered = data.filter(elem => elem['$identifier'] == pId);
+    if (filtered.length == 0) return false;
+    return filtered[0];
+  }
+
+  /* 모든 Company 이름을 리턴한다 */
+  async getNames () {
+    let data = await this.getList();
+    return data.map(elem => elem['branchName']);
+  }
+
+  async getName (pId) {
+    let data = await this.getData(pId);
+    return data['branchName'];
+  }
+
+  async getBankAccount (pId) {
+    let data = await this.getData(pId);
+    return data['bankAccount'];
+  }
+
+  async getBankName (pId) {
+    let data = await this.getBankAccount(pId);
+    return data['bankName'];
+  }
+
+  async getBankAccountName (pId) {
+    let data = await this.getBankAccount(pId);
+    return data['accountName'];
+  }
+
+  async getBankAccountNumber (pId) {
+    let data = await this.getBankAccount(pId);
+    return data['accountNumber'];
+  }
+
+  /* Company 수를 반환한다 */
   async count () {
     let allList = await this.getList();
     return allList.length;
@@ -106,11 +147,23 @@ async function Sample (tx) {
   console.log(typeof(await company.getList()));
   console.log('<List type is Array> : ');
   console.log(Array.isArray(await company.getList()));
+  console.log('<Get all ids> : ');
+  console.log(await company.getIds());
+  console.log(`<exists id(${(await company.getIds())[0]})>: `);
+  console.log(await company.existsId((await company.getIds())[0]));
   console.log('=======test stop=======');
 
 
   console.log('<<<test2>>>');
-  console.log(await company.getIds());
+  let companyIds = await company.getIds();
+  console.log(companyIds);
+  console.log(await company.getData(companyIds[0]));
+  console.log(await company.getName(companyIds[0]));
+  console.log(await company.getBankAccount(companyIds[0]));
+  console.log(await company.getBankName(companyIds[0]));
+  console.log(await company.getBankAccount(companyIds[0]));
+  console.log(await company.getBankAccountName(companyIds[0]));
+  console.log(await company.getBankAccountNumber(companyIds[0]));
   console.log('<<<test2 end>>>');
 }
 

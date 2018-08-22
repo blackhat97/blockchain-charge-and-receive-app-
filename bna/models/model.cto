@@ -2,6 +2,7 @@ namespace org.blockchain.cnr_network
 
 concept BankAccount {
   o String bankName
+  o String accountName
   o String accountNumber
 }
 

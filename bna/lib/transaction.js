@@ -18,15 +18,46 @@ class ResourceManager {
   }
 }
 
+class ParticipantManager {
+  constructor (namespace, pName/* participant name */) {
+    this.ns = namespace;
+    this.pname = pName;
+  }
+  async init () {
+    this.data = await getParticipantRegistry(this.ns + '.' + this.pname);
+  }
+
+  async getAll () {
+    return Object.values(await this.data.getAll());
+  }
+}
+
 class Company {
-  constructor (companyId) {
-    const factory = getFactory();
+  constructor (pId) {
+    this.pid = pId;
   }
+  async init () {
+    this.p = new ParticipantManager(NAMESPACE, 'Company');
+    await this.p.init();
+  }
+
   existId (companyId) {
-
   }
-  getList () {
 
+  async getList () {
+    return await this.p.getAll();
+  }
+
+  async getIds () {
+    let data = await this.getList();
+    window.aaa = data;
+    console.log(data);
+    return data.maps(elem => elem['$identifier']);
+  }
+
+  async count () {
+    let allList = await this.getList();
+    return allList.length;
   }
 }
 
@@ -60,9 +91,27 @@ async function Sample (tx) {
   console.log(ass);
   ass.unit = 5;
 
+  // const company = await new Company();
 
-  const p = await getParticipantRegistry(namespace + '.SamplePerson');
-  console.log(p.getAll());
+  const p = new ParticipantManager(namespace, 'SamplePerson');
+  await p.init();
+  const company = new Company();
+  await company.init();
+
+  console.log('=======test start=======');
+  console.log('<Length> : ' + await company.count());
+  console.log('<List> : ');
+  console.log(await company.getList());
+  console.log('<List type> : ');
+  console.log(typeof(await company.getList()));
+  console.log('<List type is Array> : ');
+  console.log(Array.isArray(await company.getList()));
+  console.log('=======test stop=======');
+
+
+  console.log('<<<test2>>>');
+  console.log(await company.getIds());
+  console.log('<<<test2 end>>>');
 }
 
 async function newCompany () {

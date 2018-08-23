@@ -8,7 +8,8 @@ concept BankAccount {
 
 participant Company identified by companyId {
   o String companyId
-  o String branchName
+  o String companyName
+  o String userName
   o BankAccount bankAccount
   o String location optional
 }
@@ -40,6 +41,10 @@ transaction Charge {
 }
 
 transaction Payment {
+  --> Bill bill
+}
+
+transaction Confirm {
   --> Bill bill
 }
 

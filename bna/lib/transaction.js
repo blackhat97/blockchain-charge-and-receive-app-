@@ -18,26 +18,96 @@ class ResourceManager {
   }
 }
 
+class ManagerHelper {
+  constructor () {
+    this.data = null;
+  }
+
+  check () {
+    if (this.data == null) throw new Error('데이터가 설정되지 않았습니다.');
+  }
+
+  getIds (id) {
+    this.check();
+    let filtered = this.data.filter(elem => elem['$identifier'] == id);
+    if (filtered.length == 0) return false;
+    return filtered[0];
+  }
+
+  getProps (propName) {
+    return this.data.map(elem => elem[propName]);
+  }
+
+  getProp (propName, propId) {
+    let props = this.getProps(propName);
+    if (props.length == 0) throw new Error(`${propName}의 ${propId}가 존재하지 않습니다.`);
+    let filtered = props.filter(elem => elem['$identifier'] == propId);
+    return filtered;
+  }
+}
+
 class ParticipantManager {
   constructor (namespace, pName/* participant name */) {
     this.ns = namespace;
     this.pname = pName;
   }
-  async init () {
-    this.data = await getParticipantRegistry(this.ns + '.' + this.pname);
+
+  async getAll () {
+    let data = await getParticipantRegistry(this.ns + '.' + this.pname);
+    return await data.getAll();
+  }
+}
+
+class AssetManager {
+  constructor (namespace, aName/* asset name*/) {
+    this.ns = namespace;
+    this.aname = aName;
   }
 
   async getAll () {
-    return await this.data.getAll();
+    let data = await getAssetRegistry(this.ns + '.' + this.aname);
+    return await data.getAll();
+  }
+}
+
+class Bill {
+  constructor (objOrId) {
+    if (typeof(objOrId) === 'object') {
+      let obj = objOrId;
+      obj = Object.assign({}, obj, {
+        source: "",
+        target: "",
+        items: [],
+        paymentDate: "",
+        confirm: "NO"
+      });
+    } else if (typeof(objOrId) === 'string') {
+      let id = objOrId;
+    } else {
+      throw new Error(`object 혹은 string 이여야 합니다.`);
+    }
+  }
+
+  async init () {
+    this.a = new AssetManager(NAMESPACE, 'Bill');
+  }
+
+  async getList () {
+    return await this.a.getAll();
+  }
+
+  new (obj) {
+  }
+
+  update () {
   }
 }
 
 class Company {
-  constructor (pId) {
+  constructor () {
   }
   async init () {
     this.p = new ParticipantManager(NAMESPACE, 'Company');
-    await this.p.init();
   }
 
   async existsId (pId) {
@@ -57,9 +127,15 @@ class Company {
   }
 
   async getData (pId) {
-    if (!(await this.existsId(pId))) return false;
     let data = await this.getList();
     let filtered = data.filter(elem => elem['$identifier'] == pId);
+    if (filtered.length == 0) return false;
+    return filtered[0];
+  }
+
+  async getId (pName) {
+    let data = await this.getList();
+    let filtered = data.filter(elem => elem['companyName'] == pName);
     if (filtered.length == 0) return false;
     return filtered[0];
   }
@@ -67,12 +143,17 @@ class Company {
   /* 모든 Company 이름을 리턴한다 */
   async getNames () {
     let data = await this.getList();
-    return data.map(elem => elem['branchName']);
+    return data.map(elem => elem['companyName']);
   }
 
   async getName (pId) {
     let data = await this.getData(pId);
-    return data['branchName'];
+    return data['companyName'];
+  }
+
+  async getUserName (pId) {
+    let data = await this.getData(pId);
+    return data['userName'];
   }
 
   async getBankAccount (pId) {
@@ -108,6 +189,7 @@ class Company {
  * @transaction
  */
 async function Charge(tx) {
+
 }
 
 /**
@@ -116,6 +198,16 @@ async function Charge(tx) {
  * @transaction
  */
 async function Payment (tx) {
+
+}
+
+
+/**
+ * Place an order for a vehicle
+ * @param {org.blockchain.cnr_network.Confirm} Confirm - the Payment confirm transaction
+ * @transaction
+ */
+async function Confirm (tx) {
 
 }
 
@@ -134,8 +226,6 @@ async function Sample (tx) {
 
   // const company = await new Company();
 
-  const p = new ParticipantManager(namespace, 'SamplePerson');
-  await p.init();
   const company = new Company();
   await company.init();
 
@@ -159,12 +249,20 @@ async function Sample (tx) {
   console.log(companyIds);
   console.log(await company.getData(companyIds[0]));
   console.log(await company.getName(companyIds[0]));
+  console.log(await company.getUserName(companyIds[0]));
   console.log(await company.getBankAccount(companyIds[0]));
   console.log(await company.getBankName(companyIds[0]));
   console.log(await company.getBankAccount(companyIds[0]));
   console.log(await company.getBankAccountName(companyIds[0]));
   console.log(await company.getBankAccountNumber(companyIds[0]));
   console.log('<<<test2 end>>>');
+
+  console.log('<<<test asset>>>');
+  const bill = new Bill('SampleAsset');
+  await bill.init();
+  let sass = await bill.getList();
+  console.log(sass);
+  console.log('<<<end test asset>>>');
 }
 
 async function newCompany () {

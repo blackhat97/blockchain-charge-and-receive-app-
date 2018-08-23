@@ -104,18 +104,36 @@ class Bill extends AssetManager {
     super(NAMESPACE, 'Bill');
   }
 
-  async init () {
-    this.a = new AssetManager(NAMESPACE, 'Bill');
+  async new (obj) {
   }
 
-  async getList () {
-    return await this.a.getAll();
+  async update () {
   }
 
-  new (obj) {
+  async getSource (id) {
+    let company = await this.getProp('source', id);
+    let companyId = company['$identifier'];
+    let c = new Company();
+    return c.getData(companyId);
   }
 
-  update () {
+  async getTarget (id) {
+    let company = await this.getProp('target', id);
+    let companyId = company['$identifier'];
+    let c = new Company();
+    return c.getData(companyId);
+  }
+
+  async getItems (id) {
+    return await this.getProp('items', id);
+  }
+
+  async getPaymentDate (id) {
+    return await this.getProp('paymentDate', id);
+  }
+
+  async getConfirmStatus (id) {
+    return await this.getProp('confirmStatus', id);
   }
 }
 
@@ -151,19 +169,16 @@ class Company extends ParticipantManager {
   async getBankName (pId) {
     let data = await this.getBankAccount(pId);
     return data['bankName'];
-    // return await this.getProp('bankName', pId);
   }
 
   async getBankAccountName (pId) {
     let data = await this.getBankAccount(pId);
     return data['accountName'];
-    // return await this.getProp('accountName', pId);
   }
 
   async getBankAccountNumber (pId) {
     let data = await this.getBankAccount(pId);
     return data['accountNumber'];
-    // return await this.getProp('accountNumber', pId);
   }
 }
 
@@ -244,8 +259,12 @@ async function Sample (tx) {
 
   console.log('<<<test asset>>>');
   const bill = new Bill('SampleAsset');
-  let sass = await bill.getAll();
-  console.log(sass);
+  let billIds = await bill.getIds();
+  console.log(billIds);
+  console.log(await bill.getAll());
+  console.log(await bill.getConfirmStatus(billIds[0]));
+  console.log(await bill.getSource(billIds[0]));
+  console.log(await bill.getTarget(billIds[0]));
   console.log('<<<end test asset>>>');
 }
 

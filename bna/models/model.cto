@@ -32,7 +32,7 @@ asset Bill identified by billId {
   --> Company source
   --> Company target
   o Items[] items
-  o String payment_date
+  o String paymentDate
   o ConfirmStatus confirmStatus default="NO"
 }
 

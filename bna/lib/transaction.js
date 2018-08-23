@@ -23,31 +23,45 @@ class ManagerHelper {
     this.data = null;
   }
 
-  check () {
-    if (this.data == null) throw new Error('데이터가 설정되지 않았습니다.');
+  async getAll () {
   }
 
-  getIds (id) {
-    this.check();
-    let filtered = this.data.filter(elem => elem['$identifier'] == id);
+  async getIds () {
+    let data = await this.getAll();
+    return data.map(elem => elem['$identifier']);
+  }
+
+  async getData (id) {
+    let data = await this.getAll();
+    let filtered = data.filter(elem => elem['$identifier'] == id);
     if (filtered.length == 0) return false;
     return filtered[0];
   }
 
-  getProps (propName) {
-    return this.data.map(elem => elem[propName]);
+  async existsId (pId) {
+    return await this.getData(pId) != false;
   }
 
-  getProp (propName, propId) {
-    let props = this.getProps(propName);
-    if (props.length == 0) throw new Error(`${propName}의 ${propId}가 존재하지 않습니다.`);
-    let filtered = props.filter(elem => elem['$identifier'] == propId);
-    return filtered;
+  async getProps (propName) {
+    let data = await this.getAll();
+    return data.map(elem => elem[propName]);
+  }
+
+  async getProp (propName, propId) {
+    let data = await this.getData(propId);
+    if (data.length == 0) throw new Error(`${propName}의 ${propId}가 존재하지 않습니다.`);
+    return data[propName];
+  }
+
+  async count () {
+    let allList = await this.getAll();
+    return allList.length;
   }
 }
 
-class ParticipantManager {
+class ParticipantManager extends ManagerHelper {
   constructor (namespace, pName/* participant name */) {
+    super();
     this.ns = namespace;
     this.pname = pName;
   }
@@ -58,8 +72,9 @@ class ParticipantManager {
   }
 }
 
-class AssetManager {
+class AssetManager extends ManagerHelper {
   constructor (namespace, aName/* asset name*/) {
+    super();
     this.ns = namespace;
     this.aname = aName;
   }
@@ -70,7 +85,7 @@ class AssetManager {
   }
 }
 
-class Bill {
+class Bill extends AssetManager {
   constructor (objOrId) {
     if (typeof(objOrId) === 'object') {
       let obj = objOrId;
@@ -86,6 +101,7 @@ class Bill {
     } else {
       throw new Error(`object 혹은 string 이여야 합니다.`);
     }
+    super(NAMESPACE, 'Bill');
   }
 
   async init () {
@@ -103,34 +119,9 @@ class Bill {
   }
 }
 
-class Company {
+class Company extends ParticipantManager {
   constructor () {
-  }
-  async init () {
-    this.p = new ParticipantManager(NAMESPACE, 'Company');
-  }
-
-  async existsId (pId) {
-    let ids = await this.getIds();
-    return ids.indexOf(pId) > -1;
-  }
-
-  /* 모든 Company 정보를 리턴한다 */
-  async getList () {
-    return await this.p.getAll();
-  }
-
-  /* 모든 Company Id를 리턴한다 */
-  async getIds () {
-    let data = await this.getList();
-    return data.map(elem => elem['$identifier']);
-  }
-
-  async getData (pId) {
-    let data = await this.getList();
-    let filtered = data.filter(elem => elem['$identifier'] == pId);
-    if (filtered.length == 0) return false;
-    return filtered[0];
+    super(NAMESPACE, 'Company');
   }
 
   async getId (pName) {
@@ -142,44 +133,37 @@ class Company {
 
   /* 모든 Company 이름을 리턴한다 */
   async getNames () {
-    let data = await this.getList();
-    return data.map(elem => elem['companyName']);
+    return this.getProps('companyName');
   }
 
-  async getName (pId) {
-    let data = await this.getData(pId);
-    return data['companyName'];
+  async getCompanyName (pId) {
+    return await this.getProp('companyName', pId);
   }
 
   async getUserName (pId) {
-    let data = await this.getData(pId);
-    return data['userName'];
+    return await this.getProp('userName', pId);
   }
 
   async getBankAccount (pId) {
-    let data = await this.getData(pId);
-    return data['bankAccount'];
+    return await this.getProp('bankAccount', pId);
   }
 
   async getBankName (pId) {
     let data = await this.getBankAccount(pId);
     return data['bankName'];
+    // return await this.getProp('bankName', pId);
   }
 
   async getBankAccountName (pId) {
     let data = await this.getBankAccount(pId);
     return data['accountName'];
+    // return await this.getProp('accountName', pId);
   }
 
   async getBankAccountNumber (pId) {
     let data = await this.getBankAccount(pId);
     return data['accountNumber'];
-  }
-
-  /* Company 수를 반환한다 */
-  async count () {
-    let allList = await this.getList();
-    return allList.length;
+    // return await this.getProp('accountNumber', pId);
   }
 }
 
@@ -227,16 +211,15 @@ async function Sample (tx) {
   // const company = await new Company();
 
   const company = new Company();
-  await company.init();
 
   console.log('=======test start=======');
   console.log('<Length> : ' + await company.count());
   console.log('<List> : ');
-  console.log(await company.getList());
+  console.log(await company.getAll());
   console.log('<List type> : ');
-  console.log(typeof(await company.getList()));
+  console.log(typeof(await company.getAll()));
   console.log('<List type is Array> : ');
-  console.log(Array.isArray(await company.getList()));
+  console.log(Array.isArray(await company.getAll()));
   console.log('<Get all ids> : ');
   console.log(await company.getIds());
   console.log(`<exists id(${(await company.getIds())[0]})>: `);
@@ -246,11 +229,13 @@ async function Sample (tx) {
 
   console.log('<<<test2>>>');
   let companyIds = await company.getIds();
-  console.log(companyIds);
-  console.log(await company.getData(companyIds[0]));
-  console.log(await company.getName(companyIds[0]));
+  console.log(await company.getProp('companyName', companyIds[0]));
+  console.log(await company.getCompanyName(companyIds[0]));
   console.log(await company.getUserName(companyIds[0]));
   console.log(await company.getBankAccount(companyIds[0]));
+  
+  console.log(await company.getData(companyIds[0]));
+  console.log(await company.getUserName(companyIds[0]));
   console.log(await company.getBankName(companyIds[0]));
   console.log(await company.getBankAccount(companyIds[0]));
   console.log(await company.getBankAccountName(companyIds[0]));
@@ -259,8 +244,7 @@ async function Sample (tx) {
 
   console.log('<<<test asset>>>');
   const bill = new Bill('SampleAsset');
-  await bill.init();
-  let sass = await bill.getList();
+  let sass = await bill.getAll();
   console.log(sass);
   console.log('<<<end test asset>>>');
 }

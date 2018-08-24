@@ -203,6 +203,31 @@ class Company extends ParticipantManager {
     super(NAMESPACE, 'Company');
   }
 
+  async new (obj) {
+    obj = Object.assign({
+      companyName: "",
+      userName: "",
+      bankName: "",  
+      accountName: "",
+      accountNumber: ""
+    }, obj);
+    let company = new Company();
+
+    const factory = getFactory();
+    let newId = await this.newId();
+    let data = await factory.newResource(NAMESPACE, 'Company', newId);
+    data.companyName = obj.companyName;
+    data.userName = obj.userName;
+    let bankAccount = await factory.newConcept(NAMESPACE, 'BankAccount');
+    bankAccount.bankName = obj.bankName;
+    bankAccount.accountName = obj.accountName;
+    bankAccount.accountNumber = obj.accountNumber;
+    data.bankAccount = bankAccount;
+    const pRegistry = await getParticipantRegistry(data.getFullyQualifiedType());
+    await pRegistry.add(data);
+    return newId;
+  }
+
   async getId (pName) {
     let data = await this.getList();
     let filtered = data.filter(elem => elem['companyName'] == pName);
@@ -244,7 +269,7 @@ class Company extends ParticipantManager {
 }
 
 /**
- * Place an order for a vehicle
+ * Add new bill asset
  * @param {org.blockchain.cnr_network.Charge} Charge - the Charge transaction
  * @transaction
  */
@@ -267,7 +292,7 @@ async function Charge(tx) {
 }
 
 /**
- * Place an order for a vehicle
+ * Update exists bill asset
  * @param {org.blockchain.cnr_network.Payment} Payment - the Payment transaction
  * @transaction
  */
@@ -284,7 +309,7 @@ async function Payment (tx) {
 
 
 /**
- * Place an order for a vehicle
+ * Update bill confirmStatus
  * @param {org.blockchain.cnr_network.Confirm} Confirm - the Payment confirm transaction
  * @transaction
  */
@@ -297,4 +322,21 @@ async function Confirm (tx) {
     confirm: tx.confirmStatus
   });
   return billId;
+}
+
+/**
+ * Add new company
+ * @param {org.blockchain.cnr_network.AddCompany} AddCompany - the AddCompany transaction
+ * @transaction
+ */
+async function AddCompany (tx) {
+  let company = new Company();
+  let companyId = await company.new({
+    companyName: tx.companyName,
+    userName: tx.userName,
+    bankName: tx.bankName,
+    accountName: tx.accountName,
+    accountNumber: tx.accountNumber
+  });
+  return companyId;
 }

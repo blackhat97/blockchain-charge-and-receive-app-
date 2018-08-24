@@ -52,17 +52,10 @@ transaction Confirm {
   o ConfirmStatus confirmStatus
 }
 
-
-participant SamplePerson identified by Id {
-  o String Id
-  o String name
-}
-asset SampleAsset identified by Id {
-  o String Id
-  o Integer unit
-}
-transaction Sample {
-  o String sampleId
-  --> SampleAsset ass
-  --> SamplePerson person
+transaction AddCompany {
+  o String companyName
+  o String userName
+  o String bankName
+  o String accountName
+  o String accountNumber
 }

@@ -1,0 +1,134 @@
+{
+    "name": "block-cnr-network",
+    "x-type": "hlfv1",
+    "version": "1.0.0",
+    "client": {
+        "organization": "CompanyA",
+        "connection": {
+            "timeout": {
+                "peer": {
+                    "endorser": "300",
+                    "eventHub": "300",
+                    "eventReg": "300"
+                },
+                "orderer": "300"
+            }
+        }
+    },
+    "channels": {
+        "mychannel": {
+            "orderers": [
+                "orderer-org"
+            ],
+            "peers": {
+                "company-a-peer-1": {
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "eventSource": true
+                },
+                "company-a-peer-2": {
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "eventSource": true
+                },
+                "company-b-peer-1": {
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "eventSource": true
+                },
+                "company-b-peer-2": {
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "eventSource": true
+                }
+            }
+        }
+    },
+    "organizations": {
+        "CompanyA": {
+            "mspid": "CompanyAMSP",
+            "peers": [
+                "company-a-peer-1",
+                "company-a-peer-2"
+            ],
+            "certificateAuthorities": [
+                "ca.org1.company-a.com"
+            ]
+        },
+        "CompanyB": {
+            "mspid": "CompanyBMSP",
+            "peers": [
+                "company-b-peer-1",
+                "company-b-peer-2"
+            ],
+            "certificateAuthorities": [
+                "ca.org1.company-b.com"
+            ]
+        }
+    },
+    "orderers": {
+        "orderer-org": {
+            "url": "grpcs://localhost:7050",
+            "grpcOptions": {
+                "ssl-target-name-override": "orderer-org"
+            },
+            "tlsCACerts": {
+                "pem": "${ORDERER_CA}"
+            }
+        }
+    },
+    "peers": {
+        "company-a-peer-1": {
+            "url": "grpcs://localhost:7051",
+            "grpcOptions": {
+                "ssl-target-name-override": "company-a-peer-1"
+            },
+            "tlsCACerts": {
+                "pem": "${COMPANY_A_CA}"
+            }
+        },
+        "company-a-peer-2": {
+            "url": "grpcs://localhost:8051",
+            "grpcOptions": {
+                "ssl-target-name-override": "company-a-peer-2"
+            },
+            "tlsCACerts": {
+                "pem": "${COMPANY_A_CA}"
+            }
+        },
+        "company-b-peer-1": {
+            "url": "grpcs://localhost:9051",
+            "grpcOptions": {
+                "ssl-target-name-override": "company-b-peer-1"
+            },
+            "tlsCACerts": {
+                "pem": "${COMPANY_B_CA}"
+            }
+        },
+        "company-b-peer-2": {
+            "url": "grpcs://localhost:10051",
+            "grpcOptions": {
+                "ssl-target-name-override": "company-b-peer-2"
+            },
+            "tlsCACerts": {
+                "pem": "${COMPANY_B_CA}"
+            }
+        }
+    },
+    "certificateAuthorities": {
+        "ca.org1.company-a.com": {
+            "url": "https://localhost:7054",
+            "caName": "ca-company-a",
+            "httpOptions": {
+                "verify": false
+            }
+        },
+        "ca.org1.company-b.com": {
+            "url": "https://localhost:8054",
+            "caName": "ca-company-b",
+            "httpOptions": {
+                "verify": false
+            }
+        }
+    }
+}

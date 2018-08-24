@@ -36,10 +36,10 @@ Organizations:
   MSPDir: cli/peers/peerOrganizations/company-b-org/msp
   AnchorPeers:
   - Host: company-b-peer-1
-    Port: 7051
+    Port: 9051
 
 Orderer: &OrdererDefaults
-  OrdererType: kafka
+  OrdererType: solo
   Addresses:
   - orderer0:7050
   BatchTimeout: 2s

@@ -1,5 +1,14 @@
 /* global getFactory getAssetRegistry getParticipantRegistry emit */
 const NAMESPACE = 'org.blockchain.cnr_network';
+function addMonth (date, m) {
+  let d = new Date(date);
+  d.setMonth(d.getMonth()+m);
+  let month = d.getMonth() + 1;
+  month < 10 ? (month = '0' + month) : (month = month + '');
+  let ddate = d.getDate();
+  ddate < 10 ? (ddate = '0' + ddate) : (ddate = ddate + '');
+  return `${d.getFullYear()}-${month}-${ddate}`;
+}
 class ResourceManager {
   consturctor (namespace, id) {
     this.id = id;
@@ -31,6 +40,19 @@ class ManagerHelper {
     return data.map(elem => elem['$identifier']);
   }
 
+  async newId () {
+    let ids = await this.getIds();
+    let id = 0;
+    if (ids.length > 0) {
+      ids = ids.sort((a, b) => parseInt(a) < parseInt(b));
+      id = parseInt(ids[0]) + 1;
+      while (await this.existsId(id)) {
+        id = id +1;
+      }
+    }
+    return id+'';
+  }
+
   async getData (id) {
     let data = await this.getAll();
     let filtered = data.filter(elem => elem['$identifier'] == id);
@@ -39,7 +61,8 @@ class ManagerHelper {
   }
 
   async existsId (pId) {
-    return await this.getData(pId) != false;
+    let data = await this.getData(pId);
+    return data != false;
   }
 
   async getProps (propName) {
@@ -87,41 +110,79 @@ class AssetManager extends ManagerHelper {
 
 class Bill extends AssetManager {
   constructor (objOrId) {
-    if (typeof(objOrId) === 'object') {
-      let obj = objOrId;
-      obj = Object.assign({}, obj, {
-        source: "",
-        target: "",
-        items: [],
-        paymentDate: "",
-        confirm: "NO"
-      });
-    } else if (typeof(objOrId) === 'string') {
-      let id = objOrId;
-    } else {
-      throw new Error(`object 혹은 string 이여야 합니다.`);
-    }
     super(NAMESPACE, 'Bill');
   }
 
   async new (obj) {
+    obj = Object.assign({
+      source: "",
+      target: "",
+      items: [],  
+      paymentDate: "",
+      confirm: "NO"
+    }, obj);
+    let company = new Company();
+    if (!(await company.existsId(obj.source))) throw new Error(`source id('${obj.source}')가 존재하지 않습니다.`);
+    if (!(await company.existsId(obj.target))) throw new Error(`target id('${obj.target}')가 존재하지 않습니다.`);
+    if (obj.items.length == 0) throw new Error('items의 갯수가 1이상이어야 합니다.');
+
+    const factory = getFactory();
+    let newId = await this.newId();
+    let data = await factory.newResource(NAMESPACE, 'Bill', newId);
+    data.source = await factory.newRelationship(NAMESPACE, 'Company', obj.source);
+    data.target = await factory.newRelationship(NAMESPACE, 'Company', obj.target);
+    data.items = [];
+    obj.items.forEach(async elem => {
+      let item = await factory.newConcept(NAMESPACE, 'Items');
+      item.name = elem.name || "";
+      item.price = elem.price || 0;
+      item.quantity = elem.quantity || 0;
+      item.remain = elem.remain || 0;
+      data.items.push(item);
+    });
+    data.paymentDate = obj.paymentDate || addMonth(new Date(), 1);
+    data.confirmStatus = obj.confirm;
+    const assetRegistry = await getAssetRegistry(data.getFullyQualifiedType());
+    await assetRegistry.add(data);
+    return newId;
   }
 
-  async update () {
+  async update (billId, obj) {
+    const factory = getFactory();
+    let bill = await this.getData(billId);
+    if (typeof(bill) !== 'object') throw new Error(`${billId}에 해당하는 Bill 데이터가 없습니다.`);
+    obj = Object.assign({
+      items: bill.items,
+      paymentDate: bill.paymentDate,
+      confirm: bill.confirmStatus
+    }, obj);
+    bill.items.map(async (elem, i) => {
+      let item = await factory.newConcept(NAMESPACE, 'Items');
+      item.name = obj.items[i].name || elem.name;
+      item.price = obj.items[i].price || elem.name;
+      item.quantity = obj.items[i].quantity || elem.quantity;
+      item.remain = obj.items[i].remain || elem.remain;
+      return item;
+    });
+    bill.paymentDate = obj.paymentDate;
+    bill.confirmStatus = obj.confirm;
+    const assetRegistry = await getAssetRegistry(bill.getFullyQualifiedType());
+    await assetRegistry.update(bill);
+    return billId;
   }
 
   async getSource (id) {
     let company = await this.getProp('source', id);
     let companyId = company['$identifier'];
     let c = new Company();
-    return c.getData(companyId);
+    return await c.getData(companyId);
   }
 
   async getTarget (id) {
     let company = await this.getProp('target', id);
     let companyId = company['$identifier'];
     let c = new Company();
-    return c.getData(companyId);
+    return await c.getData(companyId);
   }
 
   async getItems (id) {
@@ -188,7 +249,9 @@ class Company extends ParticipantManager {
  * @transaction
  */
 async function Charge(tx) {
-
+  let company = new Company();
+  console.log(company.existsId(tx.source));
+  console.log(company.existsId(tx.target));
 }
 
 /**
@@ -241,7 +304,6 @@ async function Sample (tx) {
   console.log(await company.existsId((await company.getIds())[0]));
   console.log('=======test stop=======');
 
-
   console.log('<<<test2>>>');
   let companyIds = await company.getIds();
   console.log(await company.getProp('companyName', companyIds[0]));
@@ -265,6 +327,16 @@ async function Sample (tx) {
   console.log(await bill.getConfirmStatus(billIds[0]));
   console.log(await bill.getSource(billIds[0]));
   console.log(await bill.getTarget(billIds[0]));
+  console.log('--------');
+  let newId = await bill.new({
+    source: '1993',
+    target: '3015',
+    items: [{
+    }],
+    confirm: "YES"
+  });
+  console.log(await bill.update(parseInt(newId)-1 +'', {
+  }));
   console.log('<<<end test asset>>>');
 }
 

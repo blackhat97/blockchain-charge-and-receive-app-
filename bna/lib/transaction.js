@@ -109,7 +109,7 @@ class AssetManager extends ManagerHelper {
 }
 
 class Bill extends AssetManager {
-  constructor (objOrId) {
+  constructor () {
     super(NAMESPACE, 'Bill');
   }
 
@@ -250,8 +250,20 @@ class Company extends ParticipantManager {
  */
 async function Charge(tx) {
   let company = new Company();
-  console.log(company.existsId(tx.source));
-  console.log(company.existsId(tx.target));
+  let sourceId = tx.source.$identifier,
+      targetId = tx.target.$identifier;
+
+  if (!(await company.existsId(sourceId))) throw new Error(`source id('${sourceId}')가 존재하지 않습니다.`);
+  if (!(await company.existsId(targetId))) throw new Error(`target id('${targetId}')가 존재하지 않습니다.`);
+
+  let bill = new Bill();
+  let billId = await bill.new({
+    source: sourceId,
+    target: targetId,
+    items: tx.items,
+    paymentDate: tx.paymentDate
+  });
+  return billId;
 }
 
 /**
@@ -260,7 +272,14 @@ async function Charge(tx) {
  * @transaction
  */
 async function Payment (tx) {
+  let bill = new Bill();
+  let billId = tx.bill.$identifier;
+  if (!(await bill.existsId(billId))) throw new Error(`bill id('${billId}')가 존재하지 않습니다.`);
 
+  await bill.update(billId, {
+    items: tx.items
+  });
+  return billId;
 }
 
 
@@ -270,84 +289,12 @@ async function Payment (tx) {
  * @transaction
  */
 async function Confirm (tx) {
+  let bill = new Bill();
+  let billId = tx.bill.$identifier;
+  if (!(await bill.existsId(billId))) throw new Error(`bill id('${billId}')가 존재하지 않습니다.`);
 
-}
-
-/**
- * Place an order for a vehicle
- * @param {org.blockchain.cnr_network.Sample} Sample - the Sample transaction
- * @transaction
- */
-async function Sample (tx) {
-  console.log(tx);
-  const factory = getFactory();
-  const namespace = 'org.blockchain.cnr_network';
-  const ass = factory.newResource(namespace, 'SampleAsset', tx.ass.Id);
-  console.log(ass);
-  ass.unit = 5;
-
-  // const company = await new Company();
-
-  const company = new Company();
-
-  console.log('=======test start=======');
-  console.log('<Length> : ' + await company.count());
-  console.log('<List> : ');
-  console.log(await company.getAll());
-  console.log('<List type> : ');
-  console.log(typeof(await company.getAll()));
-  console.log('<List type is Array> : ');
-  console.log(Array.isArray(await company.getAll()));
-  console.log('<Get all ids> : ');
-  console.log(await company.getIds());
-  console.log(`<exists id(${(await company.getIds())[0]})>: `);
-  console.log(await company.existsId((await company.getIds())[0]));
-  console.log('=======test stop=======');
-
-  console.log('<<<test2>>>');
-  let companyIds = await company.getIds();
-  console.log(await company.getProp('companyName', companyIds[0]));
-  console.log(await company.getCompanyName(companyIds[0]));
-  console.log(await company.getUserName(companyIds[0]));
-  console.log(await company.getBankAccount(companyIds[0]));
-  
-  console.log(await company.getData(companyIds[0]));
-  console.log(await company.getUserName(companyIds[0]));
-  console.log(await company.getBankName(companyIds[0]));
-  console.log(await company.getBankAccount(companyIds[0]));
-  console.log(await company.getBankAccountName(companyIds[0]));
-  console.log(await company.getBankAccountNumber(companyIds[0]));
-  console.log('<<<test2 end>>>');
-
-  console.log('<<<test asset>>>');
-  const bill = new Bill('SampleAsset');
-  let billIds = await bill.getIds();
-  console.log(billIds);
-  console.log(await bill.getAll());
-  console.log(await bill.getConfirmStatus(billIds[0]));
-  console.log(await bill.getSource(billIds[0]));
-  console.log(await bill.getTarget(billIds[0]));
-  console.log('--------');
-  let newId = await bill.new({
-    source: '1993',
-    target: '3015',
-    items: [{
-    }],
-    confirm: "YES"
+  await bill.update(billId, {
+    confirm: tx.confirmStatus
   });
-  console.log(await bill.update(parseInt(newId)-1 +'', {
-  }));
-  console.log('<<<end test asset>>>');
-}
-
-async function newCompany () {
-
-}
-
-async function createBill () {
-
-}
-
-async function updateBill () {
-
+  return billId;
 }

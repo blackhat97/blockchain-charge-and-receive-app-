@@ -24,7 +24,7 @@ concept Items {
 enum ConfirmStatus {
  o YES
  o NO
- o Depending
+ o DEPENDING
 }
 
 asset Bill identified by billId {
@@ -40,7 +40,7 @@ transaction Charge {
   --> Company source
   --> Company target
   o Items[] items
-  o String paymentDate
+  o String paymentDate optional
 }
 
 transaction Payment {

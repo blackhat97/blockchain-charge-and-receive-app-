@@ -156,17 +156,17 @@ class Bill extends AssetManager {
       paymentDate: bill.paymentDate,
       confirm: bill.confirmStatus
     }, obj);
-    bill.items.map(async (elem, i) => {
+    bill.items.forEach(async (elem, i) => {
       let item = await factory.newConcept(NAMESPACE, 'Items');
       item.name = obj.items[i].name || elem.name;
       item.price = obj.items[i].price || elem.name;
       item.quantity = obj.items[i].quantity || elem.quantity;
       item.remain = obj.items[i].remain || elem.remain;
-      return item;
+      bill.items[i] = item;
     });
     bill.paymentDate = obj.paymentDate;
     bill.confirmStatus = obj.confirm;
-    const assetRegistry = await getAssetRegistry(bill.getFullyQualifiedType());
+    const assetRegistry = await getAssetRegistry(await bill.getFullyQualifiedType());
     await assetRegistry.update(bill);
     return billId;
   }

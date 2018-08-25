@@ -275,8 +275,8 @@ class Company extends ParticipantManager {
  */
 async function Charge(tx) {
   let company = new Company();
-  let sourceId = tx.source.$identifier,
-      targetId = tx.target.$identifier;
+  let sourceId = tx.source,
+      targetId = tx.target;
 
   if (!(await company.existsId(sourceId))) throw new Error(`source id('${sourceId}')가 존재하지 않습니다.`);
   if (!(await company.existsId(targetId))) throw new Error(`target id('${targetId}')가 존재하지 않습니다.`);
@@ -298,7 +298,7 @@ async function Charge(tx) {
  */
 async function Payment (tx) {
   let bill = new Bill();
-  let billId = tx.bill.$identifier;
+  let billId = tx.billId;
   if (!(await bill.existsId(billId))) throw new Error(`bill id('${billId}')가 존재하지 않습니다.`);
 
   await bill.update(billId, {
@@ -315,7 +315,7 @@ async function Payment (tx) {
  */
 async function Confirm (tx) {
   let bill = new Bill();
-  let billId = tx.bill.$identifier;
+  let billId = tx.billId;
   if (!(await bill.existsId(billId))) throw new Error(`bill id('${billId}')가 존재하지 않습니다.`);
 
   await bill.update(billId, {

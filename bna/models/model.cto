@@ -36,19 +36,19 @@ asset Bill identified by billId {
 }
 
 transaction Charge {
-  --> Company source
-  --> Company target
+  o String source
+  o String target
   o Items[] items
   o String paymentDate optional
 }
 
 transaction Payment {
   o Items[] items
-  --> Bill bill
+  o String billId
 }
 
 transaction Confirm {
-  --> Bill bill
+  o String billId
   o ConfirmStatus confirmStatus
 }
 

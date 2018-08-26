@@ -1,3 +1,4 @@
+'use strict';
 const axios = require('axios');
 const mergeOptions = require('merge-options');
 const _ = require('lodash');
@@ -198,7 +199,6 @@ class Payment extends RestHelper {
       billId: "",
       items: []
     }, params);
-    console.log(params);
     let res;
     try {
       res = await this._post(params, '/api/Payment');
@@ -246,79 +246,10 @@ class Bill extends RestHelper {
   }
 }
 
-let a = new Company();
-let b = new Bill();
-let c = new Charge();
-let d = new Payment();
-let e = new Confirm();
-a.getIds().then(res => console.log(res));
-async function addCompanies () {
-  const c = new Company();
-  await c.AddCompany({
-    companyName: "Apple",
-    userName: "Tim cook",
-    bankName: "Ap",
-    accountName: 'hi',
-    accountNumber: '1234'
-  });
-  await c.AddCompany({
-    companyName: "Google",
-    userName: "Larry page",
-    bankName: "gg",
-    accountName: 'hey',
-    accountNumber: '133-334'
-  });
-}
-async function charge () {
-  const c = new Charge();
-  await c.Charge({
-    source: "0",
-    target: "1",
-    items: [{
-      "name": "1월 학원비",
-      "price": 120000,
-      "quantity": 1,
-      "remain": 1
-    }],
-    paymentDate: addMonth(new Date(), 1)
-  });
-}
-
-async function payment () {
-  const c = new Payment();
-  console.log(await c.Payment({
-    billId: "1",
-    items: [{
-      "name": "2월 학원비",
-      "price": 12000,
-      "quantity": 3,
-      "remain": 0
-    }]
-  }));
-}
-
-async function confirm (id) {
-  const c = new Confirm();
-  let a = await c.Confirm({
-    billId: id
-  });
-  console.log(a);
-}
-
-async function company () {
-  const c = new Company();
-}
-async function bill () {
-  const c = new Bill();
-  // console.log(await c.get());
-}
-
-async function test () {
-  // await addCompanies();
-  // await charge();
-  await payment();
-  // await confirm("1");
-  // await company();
-  // await bill();
-}
-test();
+module.exports = {
+  Company: Company,
+  Charge: Charge,
+  Payment: Payment,
+  Confirm: Confirm,
+  Bill: Bill,
+};

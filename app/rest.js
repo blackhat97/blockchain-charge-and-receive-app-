@@ -5,6 +5,15 @@ const _ = require('lodash');
 const HOST = 'app.nbroker.net';
 const PORT = '3000';
 
+function addMonth (date, m) {
+  let d = new Date(date);
+  d.setMonth(d.getMonth()+m);
+  let month = d.getMonth() + 1;
+  month < 10 ? (month = '0' + month) : (month = month + '');
+  let ddate = d.getDate();
+  ddate < 10 ? (ddate = '0' + ddate) : (ddate = ddate + '');
+  return `${d.getFullYear()}-${month}-${ddate}`;
+}
 class RestHelper {
   constructor (initData={}) {
     initData = mergeOptions({
@@ -28,7 +37,7 @@ class RestHelper {
     let res;
     try {
       location = location || this.location;
-      res = await axios.get(this.url+location, parameter);
+      res = await axios.get(this.url+location, parameter).catch(err => err.response.data.error);
       return res.data;
     } catch (e) {
       throw e;
@@ -39,7 +48,7 @@ class RestHelper {
     let res;
     try {
       location = location || this.location;
-      res = await axios.post(this.url+location, parameter);
+      res = await axios.post(this.url+location, parameter).catch(err => err.response.data.error);
       return res;
     } catch (e) {
       throw e;
@@ -109,6 +118,10 @@ class RestHelper {
       throw e;
     }
   }
+
+  async get (id) {
+    return await this._getData(id);
+  }
 }
 
 class Company extends RestHelper {
@@ -152,9 +165,20 @@ class Charge extends RestHelper {
   }
 
   async Charge (params={}) {
-    params = mergeOptions(params, {
-
-    });
+    params = mergeOptions({
+      "$class": 'org.blockchain.cnr_network.Charge',
+      source: "",
+      target: "",
+      items: [],
+      paymentDate: ""
+    }, params);
+    let res;
+    try {
+      res = await this._post(params, '/api/Charge');
+      return res;
+    } catch (e) {
+      throw e;
+    }
   }
 }
 
@@ -168,10 +192,20 @@ class Payment extends RestHelper {
     });
   }
 
-  async send (params) {
-    let cls = 'org.blockchain.cnr_network.Payment';
-    params = mergeOptions(params, {
-    });
+  async Payment (params) {
+    params = mergeOptions({
+      "$class": 'org.blockchain.cnr_network.Payment',
+      billId: "",
+      items: []
+    }, params);
+    console.log(params);
+    let res;
+    try {
+      res = await this._post(params, '/api/Payment');
+      return res;
+    } catch (e) {
+      throw e;
+    }
   }
 }
 
@@ -185,10 +219,19 @@ class Confirm extends RestHelper {
     });
   }
 
-  async post (params) {
-    let cls = 'org.blockchain.cnr_network.Confirm';
-    params = mergeOptions(params, {
-    });
+  async Confirm (params) {
+    params = mergeOptions({
+      "$class": 'org.blockchain.cnr_network.Confirm',
+      billId: "",
+      confirmStatus: "YES",
+    }, params);
+    let res;
+    try {
+      res = await this._post(params, '/api/Confirm');
+      return res;
+    } catch (e) {
+      throw e;
+    }
   }
 }
 
@@ -201,12 +244,6 @@ class Bill extends RestHelper {
       idProp: 'billId'
     });
   }
-
-  async post (params) {
-    let cls = 'org.blockchain.cnr_network.Bill';
-    params = mergeOptions(params, {
-    });
-  }
 }
 
 let a = new Company();
@@ -215,10 +252,73 @@ let c = new Charge();
 let d = new Payment();
 let e = new Confirm();
 a.getIds().then(res => console.log(res));
-a.addCompany({
-  companyName: "Apple",
-  userName: "Tim cook",
-  bankName: "Ap",
-  accountName: 'hi',
-  accountNumber: '1234'
-}).then(res => console.log(res)).catch(e => console.log(e.response.data.error));
+async function addCompanies () {
+  const c = new Company();
+  await c.AddCompany({
+    companyName: "Apple",
+    userName: "Tim cook",
+    bankName: "Ap",
+    accountName: 'hi',
+    accountNumber: '1234'
+  });
+  await c.AddCompany({
+    companyName: "Google",
+    userName: "Larry page",
+    bankName: "gg",
+    accountName: 'hey',
+    accountNumber: '133-334'
+  });
+}
+async function charge () {
+  const c = new Charge();
+  await c.Charge({
+    source: "0",
+    target: "1",
+    items: [{
+      "name": "1월 학원비",
+      "price": 120000,
+      "quantity": 1,
+      "remain": 1
+    }],
+    paymentDate: addMonth(new Date(), 1)
+  });
+}
+
+async function payment () {
+  const c = new Payment();
+  console.log(await c.Payment({
+    billId: "1",
+    items: [{
+      "name": "2월 학원비",
+      "price": 12000,
+      "quantity": 3,
+      "remain": 0
+    }]
+  }));
+}
+
+async function confirm (id) {
+  const c = new Confirm();
+  let a = await c.Confirm({
+    billId: id
+  });
+  console.log(a);
+}
+
+async function company () {
+  const c = new Company();
+}
+async function bill () {
+  const c = new Bill();
+  // console.log(await c.get());
+}
+
+async function test () {
+  // await addCompanies();
+  // await charge();
+  await payment();
+  // await confirm("1");
+  // await company();
+  // await bill();
+}
+test();

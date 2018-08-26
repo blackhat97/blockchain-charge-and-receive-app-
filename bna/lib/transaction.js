@@ -156,10 +156,11 @@ class Bill extends AssetManager {
       paymentDate: bill.paymentDate,
       confirm: bill.confirmStatus
     }, obj);
+    console.log(obj);
     bill.items.forEach(async (elem, i) => {
       let item = await factory.newConcept(NAMESPACE, 'Items');
       item.name = obj.items[i].name || elem.name;
-      item.price = obj.items[i].price || elem.name;
+      item.price = obj.items[i].price || elem.price;
       item.quantity = obj.items[i].quantity || elem.quantity;
       item.remain = obj.items[i].remain || elem.remain;
       bill.items[i] = item;

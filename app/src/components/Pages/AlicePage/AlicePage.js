@@ -172,7 +172,7 @@ class AlicePage extends Component {
   	} else {
 			return (
 			    <div id="aliceLoadingContainer" className="alicePageContainer">
-				  <span className="loadingSpan">Loading...</span>
+				  <span className="loadingSpan">불러오는 중...</span>
 			    </div>
 			);
 		}

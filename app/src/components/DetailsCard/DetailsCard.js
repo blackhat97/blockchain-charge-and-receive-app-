@@ -16,6 +16,7 @@ import '../../stylesheets/css/main.css';
 import { connect } from "react-redux";
 import { getProductDeatils } from "../../actions/actions";
 import { getRules } from "../../actions/actions";
+const _ = require('lodash');
 
 class DetailsCard extends Component {
   constructor(props) {
@@ -35,64 +36,89 @@ class DetailsCard extends Component {
 
   handleChange(index, event) {
     const data = this.state.data;
-    data[index] = ((this.props.type === "Rules") ? {ruleText: event.target.value} : event.target.value);
+    switch (this.props.type) {
+    case 'Rules':
+      data[index] = {ruleText: event.target.value};
+      break;
+    case 'Product':
+      _.set(data, index, event.target.value);
+      break;
+    default:
+      break;
+    }
 
     this.setState({
       data: data
     });
-
-    if(this.props.type === "Product") {
-      this.props.getProductDeatils({
-        type: this.state.data[1],
-        quantity: parseInt(this.state.data[2], 10),
-        pricePerUnit: parseFloat(this.state.data[3], 10),
-        total: parseFloat(this.state.data[2]*this.state.data[3], 10)
-      });
-    }
   }
 
   render() {
-    let mainHeadingTxt = this.props.data[0];
+    let mainHeadingTxt = this.props.title;
     let jsx;
 
     let containerClasses = this.props.disabled ? "cardContainer disabled" : "cardContainer";
-
+    
     switch(this.props.type) {
-      case 'Person':
+    case 'Person':
         jsx = (
           <div>
             <span class="subheadingSpan, topHeading">회사명</span>
-            <span class="subheadingSpan">{this.state.data[1]}</span>
+            <span class="subheadingSpan">{this.state.data['companyName']}</span>
             <span class="subheadingSpan, topHeading">직원명</span>
-            <span class="subheadingSpan">{this.state.data[2]}</span>
+            <span class="subheadingSpan">{this.state.data['userName']}</span>
             <span class="subheadingSpan, topHeading">은행명</span>
-            <span class="subheadingSpan">{this.state.data[3]}</span>
+            <span class="subheadingSpan">{this.state.data['bankName']}</span>
             <span class="subheadingSpan, topHeading">예금주</span>
-            <span class="subheadingSpan">{this.state.data[4]}</span>
+            <span class="subheadingSpan">{this.state.data['accountName']}</span>
             <span class="subheadingSpan, topHeading">계좌번호</span>
-            <span class="subheadingSpan">{this.state.data[5]}</span>
+            <span class="subheadingSpan">{this.state.data['accountNumber']}</span>
           </div>
         );
         break;
       case 'Product':
-      let currency, amount;
+      let currency, amount, remainAmount;
       currency = '₩';
-      amount = this.state.data[3];
-
+      if (this.props.user == 'alice' && this.props.data && this.props.data.billId) {
+        let productName = this.props.data.items[0].name,
+            productPrice = this.props.data.items[0].price,
+            productQuantity = this.props.data.items[0].quantity,
+            productRemain = this.props.data.items[0].remain;
+        amount = this.props.data.items[0].price * this.props.data.items[0].quantity;
+        remainAmount = this.props.data.items[0].price * this.props.data.items[0].remain;
         jsx = (
             <div>
             <span class="subheadingSpan, topHeading">청구 회사 선택</span>
-            { (this.state.editable) ? <input class="subheadingSpan" type="text" onChange={this.handleChange.bind(this, 1)} defaultValue={this.state.data[1]} /> : <span class="subheadingSpan">{this.state.data[1]}</span> }
+            { (this.state.editable) ? <input class="subheadingSpan" type="text" onChange={this.handleChange.bind(this, 'items.0.name')} defaultValue={productName} /> : <span class="subheadingSpan">{productName}</span> }
             <span class="subheadingSpan, topHeading">물품</span>
-            { (this.state.editable) ? <input class="subheadingSpan" type="text" onChange={this.handleChange.bind(this, 1)} defaultValue={this.state.data[1]} /> : <span class="subheadingSpan">{this.state.data[1]}</span> }
-            <span class="subheadingSpan, topHeading">수량</span>
-            { (this.state.editable) ? <input class="subheadingSpan" type="number" min="0" onChange={this.handleChange.bind(this, 2)} defaultValue={this.state.data[2]} /> : <span class="subheadingSpan">{this.state.data[2] ? this.state.data[2] : "0"}</span> }
+            { (this.state.editable) ? <input class="subheadingSpan" type="text" onChange={this.handleChange.bind(this, 'items.0.name')} defaultValue={productName} /> : <span class="subheadingSpan">{productName}</span> }
+            <span class="subheadingSpan, topHeading">미지급 수량</span>
+            { (this.state.editable) ? <input class="subheadingSpan" type="number" min="0" onChange={this.handleChange.bind(this, 'items.0.remain')} defaultValue={productRemain} /> : <span class="subheadingSpan">{productRemain ? productRemain : "0"}</span> }
             <span class="subheadingSpan, topHeading">가격(개당)</span>
-            { (this.state.editable) ? <input class="subheadingSpan" type="number" min="0" onChange={this.handleChange.bind(this, 3)} defaultValue={this.state.data[3]} /> : <span class="subheadingSpan">{currency + (this.state.data[3] ? amount.toLocaleString() : "0")}</span> }
-            <span class="subheadingSpan, topHeading">총액</span>
-            <span class="subheadingSpan">{currency + (this.state.data[2]*amount).toLocaleString()}</span>
+            { (this.state.editable) ? <input class="subheadingSpan" type="number" min="0" onChange={this.handleChange.bind(this, 'items.0.price')} defaultValue={productPrice} /> : <span class="subheadingSpan">{currency + (productPrice ? amount.toLocaleString() : "0")}</span> }
+            <span class="subheadingSpan, topHeading">잔액/총액</span>
+            <span class="subheadingSpan">{currency + (remainAmount).toLocaleString()}/{currency + (amount).toLocaleString()}</span>
           </div>
         );
+      } else if (this.props.user == 'bob' && this.props.data && this.props.data.billId) {
+        let productName = this.props.data.items[0].name,
+            productPrice = this.props.data.items[0].price,
+            productQuantity = this.props.data.items[0].quantity,
+            productRemain = this.props.data.items[0].remain;
+        amount = this.props.data.items[0].price * this.props.data.items[0].quantity;
+        remainAmount = this.props.data.items[0].price * this.props.data.items[0].remain;
+        jsx = (
+            <div>
+            <span class="subheadingSpan, topHeading">물품</span>
+            { <span class="subheadingSpan">{productName}</span> }
+            <span class="subheadingSpan, topHeading">미지급 수량</span>
+            { (this.state.editable) ? <input class="subheadingSpan" type="number" min="0" onChange={this.handleChange.bind(this, 'items.0.remain')} defaultValue={productRemain} /> : <span class="subheadingSpan">{productRemain ? productRemain : "0"}</span> }
+            <span class="subheadingSpan, topHeading">가격(개당)</span>
+            { <span class="subheadingSpan">{currency + (productPrice ? amount.toLocaleString() : "0")}</span> }
+            <span class="subheadingSpan, topHeading">잔액/총액</span>
+            <span class="subheadingSpan">{currency + (remainAmount).toLocaleString()}/{currency + (amount).toLocaleString()}</span>
+          </div>
+        );
+      }
         break;
       case 'Rules':
         mainHeadingTxt = "거래명세서 이용약관";

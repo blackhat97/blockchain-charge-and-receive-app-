@@ -23,9 +23,11 @@ import Config from '../../utils/config';
 import backButtonIcon from '../../resources/images/left-arrow.svg'
 import Stepper from '../../components/Stepper/Stepper.js';
 import Modal from '../../components/Modal/Modal.js'
-const { Company } = require('block-cnr');
+const _ = require('lodash');
+const { Company, Bill } = require('block-cnr');
 
 const company = new Company();
+const bill = new Bill();
 
 class LetterOfCredit extends Component {
   constructor(props) {
@@ -35,16 +37,17 @@ class LetterOfCredit extends Component {
     let isApply = this.props.isApply;
 
     // check if there's a letter stored in local storage, meaning page has been refreshed
-    if(localStorage.getItem('letter')) {
-      letter = JSON.parse(localStorage.getItem('letter'));
-    }
-    else {
-      // if nothing has been stored then letter is being opened for the first time - use props
-      letter = this.props.letter;
-      // store that in local storage in case of a refresh
-      // can only store strings so need to stringify letter object
-      localStorage.setItem('letter', JSON.stringify(this.props.letter));
-    }
+    // console.log(localStorage.getItem('letter'));
+    // if(localStorage.getItem('letter')) {
+    //   letter = JSON.parse(localStorage.getItem('letter'));
+    // }
+    // else {
+    //   // if nothing has been stored then letter is being opened for the first time - use props
+    //   letter = this.props.letter;
+    //   // store that in local storage in case of a refresh
+    //   // can only store strings so need to stringify letter object
+    //   localStorage.setItem('letter', JSON.stringify(this.props.letter));
+    // }
 
     // check if letter is an empty object and if it is, manually set isApply to true
     // in order to handle a refresh of the create page
@@ -55,7 +58,12 @@ class LetterOfCredit extends Component {
     this.state = {
       isApply: isApply,
       letter: letter,
+      company: this.props.company,
       user: this.props.match.params.name,
+      billId: this.props.match.params.id,
+      userDetails: {},
+      sourceDetails: {},
+      targetDetails: {},
       transactions: [],
       disableButtons: false,
       redirect: false,
@@ -108,7 +116,79 @@ class LetterOfCredit extends Component {
     let user = this.props.match.params.name;
     let id = this.props.match.params.id;
     document.title = (user === "matias" ? "Matías" : user.charAt(0).toUpperCase() + user.substr(1)) + " - " + (id === "create" ? "Create LoC" : id);
+		this.getUserInfo();
+    this.getBills();
   }
+
+  getBills () {
+    if (this.state.billId) {
+      bill.get()
+        .then(res => {
+          let data = res.filter(elem => elem.billId == this.state.billId)[0];
+          console.log(data);
+          this.setState ({
+            bill: data
+          });
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    } else {
+    }
+  }
+
+	getUserInfo() {
+		let userDetails = {};
+		let sourceDetails = {};
+		let targetDetails = {};
+    // if (this.state.billId) {
+    //   bill.get()
+    //     .then(res => {
+    //       let data = res.filter(elem => elem.billId == this.state.billId)[0];
+    //     })
+    //     .catch(err => {
+    //       console.log(err);
+    //     });
+    // } else {
+    // }
+
+    company.get()
+      .then(res => {
+        let sourceData = res[0];
+        let targetData = res[1];
+        let data = res[0];
+        userDetails = {
+          companyName: data.companyName,
+          userName: data.userName,
+          bankName: data.bankAccount.bankName,
+          accountName: data.bankAccount.accountName,
+          accountNumber: data.bankAccount.accountNumber
+        };
+        sourceDetails = {
+          companyName: sourceData.companyName,
+          userName: sourceData.userName,
+          bankName: sourceData.bankAccount.bankName,
+          accountName: sourceData.bankAccount.accountName,
+          accountNumber: sourceData.bankAccount.accountNumber
+        };
+        targetDetails = {
+          companyName: targetData.companyName,
+          userName: targetData.userName,
+          bankName: targetData.bankAccount.bankName,
+          accountName: targetData.bankAccount.accountName,
+          accountNumber: targetData.bankAccount.accountNumber
+        };
+        document.title = this.state.user == 'alice' ? sourceDetails.userName : targetDetails.userName;
+        this.setState ({
+          userDetails: userDetails,
+          sourceDetails: sourceDetails,
+          targetDetails: targetDetails
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+	}
 
   componentWillUnmount() {
     // clear local storage when moving away from component
@@ -118,15 +198,13 @@ class LetterOfCredit extends Component {
   showModal(tx) {
     // work out what transaction will be made if the yes button is clicked
     const txTypes = {
-      CREATE: "CREATE",
-      APPROVE: "APPROVE",
-      REJECT: "REJECT",
-      PAY: "PAY",
-      CLOSE: "CLOSE"
+      YES: "YES",
+      NO: "NO",
+      DEPENDING: "DEPENDING"
     }
 
     let callback;
-    if (tx === 'CREATE') {
+    if (tx === 'YES') {
       callback = () => {
         this.hideModal();
         this.createLOC(this.props.productDetails.type, this.props.productDetails.quantity, this.props.productDetails.pricePerUnit, this.props.rules)
@@ -313,116 +391,117 @@ class LetterOfCredit extends Component {
       return <Redirect push to={"/" + this.state.redirectTo} />;
     }
 
-    let activeStep = 0;
-    if (this.state.letter.status === 'AWAITING_APPROVAL') {
-      if (!this.state.letter.approval.includes('resource:org.example.loc.BankEmployee#matias')) {
-
-        activeStep = 1;
-      }
-      else if (!this.state.letter.approval.includes('resource:org.example.loc.BankEmployee#ella')) {
-        activeStep = 2;
-      }
-      else if (!this.state.letter.approval.includes('resource:org.example.loc.Customer#bob')) {
+    if (_.isString(_.get(this.state, 'sourceDetails.companyName')) && (_.isString(_.get(this.state, 'bill.billId')) || this.state.billId=='create')) {
+      let activeStep = 0;
+      switch (_.get(this.state, 'bill.confirmStatus')) {
+      case 'YES':
         activeStep = 3;
+        break;
+      case 'DEPENDING':
+        activeStep = 2;
+        break;
+      case 'NO':
+        activeStep = 1;
+        break;
+      default:
+        activeStep = 0;
+        break;
       }
-    }
-    else if (this.state.letter.status === 'APPROVED'){
-        activeStep = 4;
-    } else if (this.state.letter.status === 'SHIPPED') {
-      activeStep = 5;
-    } else if (this.state.letter.status === 'RECEIVED'){
-      activeStep = 6;
-    } else if (this.state.letter.status === 'READY_FOR_PAYMENT'){
-      activeStep = 7;
-    } else if (this.state.letter.status === 'CLOSED'){
-      activeStep = 8;
-    }
 
-    let productDetails = this.props.productDetails;
-    let rules = this.props.rules;
-    let buttonJSX = (<div/>);
-    if (!this.state.isApply) {
-      productDetails = {
-        type: this.state.letter.productDetails.productType,
-        quantity: this.state.letter.productDetails.quantity,
-        pricePerUnit: this.state.letter.productDetails.pricePerUnit
-      };
-      rules = this.state.letter.rules;
-      let isAwaitingApproval = (
-        this.state.letter.status === 'AWAITING_APPROVAL' &&
-         (!this.state.letter.approval.includes('resource:org.example.loc.Customer#'+this.state.user) &&
-         (!this.state.letter.approval.includes('resource:org.example.loc.BankEmployee#'+this.state.user)))
-      );
-      if (isAwaitingApproval) {
-        buttonJSX = (
-          <div class="actions">
-            <button disabled={this.state.disableButtons} onClick={() => {this.showModal('REJECT')}}>I reject the application</button>
-            <button disabled={this.state.disableButtons} onClick={() => {this.showModal('APPROVE')}}>I accept the application</button>
-          </div>
+      let productDetails = this.props.productDetails;
+      let rules = this.props.rules;
+      let buttonJSX = (<div/>);
+      if (!this.state.isApply) {
+        productDetails = {
+          type: this.state.letter.productDetails.productType,
+          quantity: this.state.letter.productDetails.quantity,
+          pricePerUnit: this.state.letter.productDetails.pricePerUnit
+        };
+        rules = this.state.letter.rules;
+        let isAwaitingApproval = (
+          this.state.letter.status === 'AWAITING_APPROVAL' &&
+            (!this.state.letter.approval.includes('resource:org.example.loc.Customer#'+this.state.user) &&
+             (!this.state.letter.approval.includes('resource:org.example.loc.BankEmployee#'+this.state.user)))
         );
-      } else if (this.state.letter.status === 'RECEIVED' && this.state.user === 'matias') {
+        if (isAwaitingApproval) {
+          buttonJSX = (
+              <div class="actions">
+              <button disabled={this.state.disableButtons} onClick={() => {this.showModal('REJECT')}}>I reject the application</button>
+              <button disabled={this.state.disableButtons} onClick={() => {this.showModal('APPROVE')}}>I accept the application</button>
+              </div>
+          );
+        } else if (this.state.letter.status === 'RECEIVED' && this.state.user === 'matias') {
+          buttonJSX = (
+              <div class="actions">
+              <button disabled={this.state.disableButtons} onClick={() => {this.showModal('PAY')}}>Ready for Payment</button>
+              </div>
+          );
+        } else if (this.state.letter.status === 'READY_FOR_PAYMENT' && this.state.user === 'ella') {
+          buttonJSX = (
+              <div class="actions">
+              <button disabled={this.state.disableButtons} onClick={() => {this.showModal('CLOSE')}}>Close this Letter of Credit</button>
+              </div>
+          );
+        } else {
+          buttonJSX = (<div/>);
+        }
+      } else {
         buttonJSX = (
-          <div class="actions">
-            <button disabled={this.state.disableButtons} onClick={() => {this.showModal('PAY')}}>Ready for Payment</button>
-          </div>
+            <div class="actions">
+            <button disabled={this.state.disableButtons || this.props.productDetails.type === "" || this.props.productDetails.quantity === 0 || this.props.productDetails.pricePerUnit === 0} onClick={() => {this.showModal('CREATE')}}>청구 하기</button>
+            </div>
         );
-      } else if (this.state.letter.status === 'READY_FOR_PAYMENT' && this.state.user === 'ella') {
-        buttonJSX = (
-          <div class="actions">
-            <button disabled={this.state.disableButtons} onClick={() => {this.showModal('CLOSE')}}>Close this Letter of Credit</button>
+      }
+
+      let username = (this.state.user.charAt(3) === 'i') ? 'Matías' : this.state.user.charAt(0).toUpperCase() + this.state.user.slice(1);
+      if (username === 'Alice') username += ' - 청구인';
+      else username += ' - 지급인';
+
+      if (!this.state.disableButtons) {
+        console.log(`---------`);
+        console.log(this.state.sourceDetails);
+        return (
+            <div class="LCcontainer">
+            <Modal show={this.state.showModal} modalType={this.state.modalType} user={this.state.user} cancelCallback={()=>{this.hideModal()}} yesCallback={this.state.modalFunction}/>
+            <div class="LCHeader">
+            <div>
+            <img class="backButton" src={backButtonIcon} alt="go back" onClick={() => {if(!this.state.disableButtons){this.handleOnClick(this.state.user)}}}/>
+            </div>
+            <p class="loc-text">Block C&R</p>
+            <p class="username-txt">{username}</p>
+            </div>
+            <table className="contentTable">
+            <tr>
+            <td> <h1>청구서 상세</h1> </td>
+            <td colspan="2"> <Stepper steps= {['청구서 작성','수금 요청', '수금 진행중..','수금 완료']} activeStep={activeStep}/> </td>  
+            </tr>
+            <tr>
+            <td> <DetailsCard disabled={true} type="Person" title="청구사 정보" data={this.state.sourceDetails}/> </td>
+            <td> <DetailsCard disabled={true} type="Person" title="지급사 정보" data={this.state.targetDetails}/> </td>
+            <td> <DetailsCard type="Product" title="물품 상세" data={this.state.bill} canEdit={this.state.isApply} user={this.state.user}/> </td>
+            <td className="blockchainCell" rowspan="2"> <BlockChainDisplay transactions={this.state.transactions}/> </td>
+            </tr>
+            <tr>
+            <td colspan="3"> <DetailsCard type="Rules" data={rules} canEdit={this.state.isApply}/> </td>
+            </tr>
+            </table>
+            {buttonJSX}
+          { this.state.disableButtons && <div class="statusMessage"> 기다려 주세요... </div> }
           </div>
         );
       } else {
-        buttonJSX = (<div/>);
+        return (
+            <div class="LCcontainer">
+            <span className="waitText">기다려 주세요...</span>
+            </div>
+        );
       }
     } else {
-      buttonJSX = (
-        <div class="actions">
-          <button disabled={this.state.disableButtons || this.props.productDetails.type === "" || this.props.productDetails.quantity === 0 || this.props.productDetails.pricePerUnit === 0} onClick={() => {this.showModal('CREATE')}}>청구 하기</button>
-        </div>
-      );
-    }
-
-    let username = (this.state.user.charAt(3) === 'i') ? 'Matías' : this.state.user.charAt(0).toUpperCase() + this.state.user.slice(1);
-    if (username === 'Alice') username += ' - 청구인';
-    else username += ' - 지급인';
-
-    if (!this.state.disableButtons) {
       return (
-        <div class="LCcontainer">
-          <Modal show={this.state.showModal} modalType={this.state.modalType} user={this.state.user} cancelCallback={()=>{this.hideModal()}} yesCallback={this.state.modalFunction}/>
-          <div class="LCHeader">
-            <div>
-              <img class="backButton" src={backButtonIcon} alt="go back" onClick={() => {if(!this.state.disableButtons){this.handleOnClick(this.state.user)}}}/>
-            </div>
-            <p class="loc-text">청구서</p>
-            <p class="username-txt">{username}</p>
+          <div id="ellaLoadingContainer" className="ellaPageContainer">
+				  <span className="ellaLoadingSpan">불러오는 중...</span>
           </div>
-          <table className="contentTable">
-            <tr>
-              <td> <h1>청구서 상세</h1> </td>
-              <td colspan="2"> <Stepper steps= {['Letter Application','BoD\'s Approval','EB\'s Approval','Bob\'s Approval','Goods Shipped','Shipment Accepted','Payment Made','Letter Closed']} activeStep={activeStep}/> </td>  
-            </tr>
-            <tr>
-              <td> <DetailsCard disabled={true} type="Person" data={["청구사 정보"].concat(Object.values(this.props.applicant))}/> </td>
-              <td> <DetailsCard disabled={true} type="Person" data={["지급사 정보"].concat(Object.values(this.props.beneficiary))}/> </td>
-              <td> <DetailsCard type="Product" data={["물품 상세"].concat(Object.values(productDetails))} canEdit={this.state.isApply} user={this.state.user}/> </td>
-              <td className="blockchainCell" rowspan="2"> <BlockChainDisplay transactions={this.state.transactions}/> </td>
-            </tr>
-            <tr>
-              <td colspan="3"> <DetailsCard type="Rules" data={rules} canEdit={this.state.isApply}/> </td>
-            </tr>
-          </table>
-          {buttonJSX}
-          { this.state.disableButtons && <div class="statusMessage"> 기다려 주세요... </div> }
-        </div>
-      );
-    } else {
-      return (
-        <div class="LCcontainer">
-          <span className="waitText">기다려 주세요...</span>
-        </div>
-      );
+			);
     }
   }
 }

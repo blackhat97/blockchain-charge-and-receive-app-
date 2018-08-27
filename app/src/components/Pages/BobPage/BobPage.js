@@ -127,7 +127,7 @@ class BobPage extends Component {
   generateCard(i) {
     // should only show LOCs that are ready for Bob to approve
     if (this.state.bills.length > 0){
-      if(i < this.state.letters.length){
+      if(i < this.state.bills.length){
         return (
           <LoCCard bill={this.state.bills[i]} callback={this.state.callback} pageType={"view"} user="bob"/>
         );
@@ -201,7 +201,7 @@ class BobPage extends Component {
     } else {
       return (
         <div id="bobLoadingContainer" className="bobPageContainer">
-          <span className="loadingSpan">Loading...</span>
+          <span className="loadingSpan">불러오는 중...</span>
         </div>
       );
     }

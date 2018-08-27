@@ -31,7 +31,7 @@ class LoCApplyCard extends Component {
 
   render() {
     if (this.state.redirect) {
-      return <Redirect push to={this.props.user + "/loc/create"} />;
+      return <Redirect push to={this.props.user + "/bill/create"} />;
     }
     return (
       <div className="LoCCard noBorder">

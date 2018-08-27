@@ -102,7 +102,7 @@ class LoCCard extends Component {
         status = '미수금';
         break;
       default:
-        status = '수금 진행중..';
+        status = '완료 대기중...';
         break;
       }
     } else {
@@ -114,7 +114,7 @@ class LoCCard extends Component {
         status = '미지급 대금';
         break;
       default:
-        status = '대금 지급중..';
+        status = '대금 지급 완료';
         break;
       }
     }
@@ -124,7 +124,6 @@ class LoCCard extends Component {
   generateCardContents(bill, user) {
     let contents;
     let newMessage = "";
-    console.log(bill);
     // if(!this.props.letter.approval.includes("bob")){
     //   newMessage = "NEW";
     // }
@@ -135,8 +134,8 @@ class LoCCard extends Component {
           <div>
             <h2>{newMessage}</h2>
             <h2>{'번호: ' + bill.billId}</h2>
-            <p>품목: <b>{bill.items[0].name}</b></p>
-          <p>개수: <b>{bill.items[0].quantity.toLocaleString()}</b></p>
+            <p>품명: <b>{bill.items[0].name}</b></p>
+          <p>개수: <b>{bill.items[0].quantity.toLocaleString()}개</b></p>
           <p>미지급 개수: <b>{bill.items[0].remain.toLocaleString()}개</b></p>
           <p>미지급 금액: <b>₩{((bill.items[0].remain)*bill.items[0].price).toLocaleString()}</b></p>
             <div className = "toggleContainer hide">
@@ -154,8 +153,8 @@ class LoCCard extends Component {
           <div>
           <h2>{this.generateStatus(bill, true)}</h2>
             <h2>{'번호: ' + bill.billId}</h2>
-          <p>품목: <b>{bill.items[0].name}</b></p>
-          <p>개수: <b>{bill.items[0].quantity.toLocaleString()}</b></p>
+          <p>품명: <b>{bill.items[0].name}</b></p>
+          <p>개수: <b>{bill.items[0].quantity.toLocaleString()}개</b></p>
           <p>미수금 개수: <b>{bill.items[0].remain.toLocaleString()}개</b></p>
           <p>미수금 금액: <b>₩{((bill.items[0].remain)*bill.items[0].price).toLocaleString()}</b></p>
             <div className = "toggleContainer hide">
@@ -169,45 +168,56 @@ class LoCCard extends Component {
         </div>
       );
     }
-    let shippingText;
-    let checked = bill.confirmStatus !== 'YES';
+    let statusText;
+    let checked;
     //generate accepted LoC cards
     if (user === 'bob') {
-      if (bill.confirmStatus !== 'DEPENDING') {
-        // generating a hash from the timestamp
-        let idStyle;
-        shippingText = "Ship Product";
-        if (bill.confirmStatus !== 'YES'){
-          idStyle = "LoCCardBobAccepted";
-          this.state.toggleChecked = true;
-          this.state.toggleDisabled = true;
-          shippingText = "Product Shipped";
-        }
-        let hash = new Date().getTime().toString(24);
-          // <!--            <Modal show={this.state.showModal} modalType={'SHIP'} cancelCallback={this.hideModal} yesCallback={() => {this.shipProduct(letter.letterId, hash)}}/> -->
-        contents = (
-          <div className = "LoCCardBob" id= {idStyle}>
-            <div>
-              <h2>{this.generateStatus(bill)}</h2>
-              <h2>{'번호: ' + bill.letterId}</h2>
-              <p>Product Type: <b>{bill.itmes[0].name}</b></p>
-              <div className = "toggleContainer">
-                <Toggle className='customToggle' checked={checked} defaultChecked={this.state.toggleChecked} onChange={this.showModal} disabled ={this.state.toggleDisabled} />
-                <span className="shipText">{shippingText}</span>
-              </div>
-                <img class="viewButtonBob" src={viewArrow} alt="View Letter of Credit" onClick={this.handleOnClick}/>
-            </div>
-          </div>
-        );
+      let idStyle;
+      switch (bill.confirmStatus) {
+      case 'YES':
+        idStyle = "LoCCardBobAccepted";
+        this.state.toggleChecked = true;
+        this.state.toggleDisabled = true;
+        checked = true;
+        statusText = "완료";
+        break;
+      case 'NO':
+        statusText = "미지급";
+        this.state.toggleChecked = false;
+        this.state.toggleDisabled = false;
+        checked = false;
+        break;
+      case 'DEPENDING':
+        this.state.toggleChecked = false;
+        this.state.toggleDisabled = true;
+        statusText = "완료 대기중...";
+        checked = true;
+        break;
+      default:
+        break;
       }
+      contents = (
+          <div className = "LoCCardBob" id= {idStyle}>
+          <div>
+          <h2>{bill.billId + ':' + this.generateStatus(bill)}</h2>
+          <p>품명: <b>{bill.items[0].name}</b></p>
+          <p>납부 잔액: <b>₩{((bill.items[0].remain)*bill.items[0].price).toLocaleString()}</b></p>
+          <div className = "toggleContainer">
+          <Toggle className='customToggle' checked={checked} defaultChecked={this.state.toggleChecked} onChange={this.showModal} disabled ={this.state.toggleDisabled} />
+          <span className="shipText">{statusText}</span>
+          </div>
+          <img class="viewButtonBob" src={viewArrow} alt="View Letter of Credit" onClick={this.handleOnClick}/>
+          </div>
+          </div>
+      );
     } else {
       if (bill.confirmStatus !== 'DEPENDING' && bill.confirmStatus !== 'YES' && bill.confirmStatus !== 'NO') {
         // generating a hash from the timestamp
-        shippingText = "Receive Product";
+        statusText = "Receive Product";
         if (bill.confirmStatus !== 'YES') {
           this.state.toggleChecked = true;
           this.state.toggleDisabled = true;
-          shippingText = "Product Received";
+          statusText = "Product Received";
         }
           // <!--                <Toggle className='customToggle customToggleAlice' defaultChecked={this.state.toggleChecked} icons={false} onChange={() => {this.receiveProduct(letter.letterId)}} disabled ={this.state.toggleDisabled}/> -->
         contents = (
@@ -215,9 +225,13 @@ class LoCCard extends Component {
             <div>
             <h2>{this.generateStatus(bill, true)}</h2>
               <h2>{'번호: ' + bill.billId}</h2>
+            <p>품명: <b>{bill.items[0].name}</b></p>
+            <p>개수: <b>{bill.items[0].quantity.toLocaleString()}개</b></p>
+            <p>미지급 개수: <b>{bill.items[0].remain.toLocaleString()}개</b></p>
+            <p>미지급 금액: <b>₩{((bill.items[0].remain)*bill.items[0].price).toLocaleString()}</b></p>
               <p>Product Type: <b>{bill.items[0].name}</b></p>
               <div className = "toggleContainer">
-                <span className="shipText">{shippingText}</span>
+            <span className="shipText">{statusText}</span>
               </div>
               <button className="viewButton" onClick={() => this.handleOnClick()}>
                 <p className="buttonText"><span>View Letter Of Credit</span></p>
@@ -233,7 +247,7 @@ class LoCCard extends Component {
   render() {
     console.log(this.props.bill);
     if (this.state.redirect) {
-      return <Redirect push to={"/" + this.props.user + "/loc/" + this.props.letter.letterId} />;
+      return <Redirect push to={"/" + this.props.user + "/bill/" + this.props.bill.billId} />;
     }
     return (
         this.generateCardContents(this.props.bill, this.props.user)

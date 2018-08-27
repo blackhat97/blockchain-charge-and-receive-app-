@@ -36,9 +36,9 @@ const initialState = {
     total: 0
   },
   rules: [
-    {ruleText: "The correct quantity of product has been delivered."},
-    {ruleText: "The product was received within 30 days of the placement of the order."},
-    {ruleText: "The product is not damaged and functions as expected."}
+    {ruleText: "정확한 양의 물품이 인도되어야 합니다."},
+    {ruleText: "물품을 구매한 날로부터 30일 이내에 결제를 해야합니다."},
+    {ruleText: "물품이 손상되지 않고 예상대로 작동 하여야 합니다."}
   ]
 }
 

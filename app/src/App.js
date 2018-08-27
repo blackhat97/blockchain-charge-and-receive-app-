@@ -20,7 +20,9 @@ import BobPage from './components/Pages/BobPage/BobPage.js';
 import MatiasPage from './components/Pages/MatiasPage/MatiasPage.js';
 import EllaPage from './components/Pages/EllaPage/EllaPage.js';
 import TutorialPage from './components/Pages/TutorialPage/TutorialPage.js';
+const { Bill } = require('block-cnr');
 
+const bill = new Bill();
 class App extends Component {
   constructor() {
     super();

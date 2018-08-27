@@ -23,6 +23,9 @@ import Config from '../../utils/config';
 import backButtonIcon from '../../resources/images/left-arrow.svg'
 import Stepper from '../../components/Stepper/Stepper.js';
 import Modal from '../../components/Modal/Modal.js'
+const { Company } = require('block-cnr');
+
+const company = new Company();
 
 class LetterOfCredit extends Component {
   constructor(props) {
@@ -375,16 +378,14 @@ class LetterOfCredit extends Component {
     } else {
       buttonJSX = (
         <div class="actions">
-          <button disabled={this.state.disableButtons || this.props.productDetails.type === "" || this.props.productDetails.quantity === 0 || this.props.productDetails.pricePerUnit === 0} onClick={() => {this.showModal('CREATE')}}>Start approval process</button>
+          <button disabled={this.state.disableButtons || this.props.productDetails.type === "" || this.props.productDetails.quantity === 0 || this.props.productDetails.pricePerUnit === 0} onClick={() => {this.showModal('CREATE')}}>청구 하기</button>
         </div>
       );
     }
 
     let username = (this.state.user.charAt(3) === 'i') ? 'Matías' : this.state.user.charAt(0).toUpperCase() + this.state.user.slice(1);
-    if (username === 'Alice') username += ' - Applicant';
-    else if (username === 'Matías') username += ' - Issuing Bank';
-    else if (username === 'Ella') username += ' - Exporting Bank';
-    else username += ' - Beneficiary';
+    if (username === 'Alice') username += ' - 청구인';
+    else username += ' - 지급인';
 
     if (!this.state.disableButtons) {
       return (
@@ -394,18 +395,18 @@ class LetterOfCredit extends Component {
             <div>
               <img class="backButton" src={backButtonIcon} alt="go back" onClick={() => {if(!this.state.disableButtons){this.handleOnClick(this.state.user)}}}/>
             </div>
-            <p class="loc-text">Letter of Credit</p>
+            <p class="loc-text">청구서</p>
             <p class="username-txt">{username}</p>
           </div>
           <table className="contentTable">
             <tr>
-              <td> <h1>Contract Details</h1> </td>
+              <td> <h1>청구서 상세</h1> </td>
               <td colspan="2"> <Stepper steps= {['Letter Application','BoD\'s Approval','EB\'s Approval','Bob\'s Approval','Goods Shipped','Shipment Accepted','Payment Made','Letter Closed']} activeStep={activeStep}/> </td>  
             </tr>
             <tr>
-              <td> <DetailsCard disabled={true} type="Person" data={["Application Request"].concat(Object.values(this.props.applicant))}/> </td>
-              <td> <DetailsCard disabled={true} type="Person" data={["Supplier Request"].concat(Object.values(this.props.beneficiary))}/> </td>
-              <td> <DetailsCard type="Product" data={["Product Details"].concat(Object.values(productDetails))} canEdit={this.state.isApply} user={this.state.user}/> </td>
+              <td> <DetailsCard disabled={true} type="Person" data={["청구사 정보"].concat(Object.values(this.props.applicant))}/> </td>
+              <td> <DetailsCard disabled={true} type="Person" data={["지급사 정보"].concat(Object.values(this.props.beneficiary))}/> </td>
+              <td> <DetailsCard type="Product" data={["물품 상세"].concat(Object.values(productDetails))} canEdit={this.state.isApply} user={this.state.user}/> </td>
               <td className="blockchainCell" rowspan="2"> <BlockChainDisplay transactions={this.state.transactions}/> </td>
             </tr>
             <tr>
@@ -413,13 +414,13 @@ class LetterOfCredit extends Component {
             </tr>
           </table>
           {buttonJSX}
-          { this.state.disableButtons && <div class="statusMessage"> Please wait... </div> }
+          { this.state.disableButtons && <div class="statusMessage"> 기다려 주세요... </div> }
         </div>
       );
     } else {
       return (
         <div class="LCcontainer">
-          <span className="waitText">Please wait...</span>
+          <span className="waitText">기다려 주세요...</span>
         </div>
       );
     }

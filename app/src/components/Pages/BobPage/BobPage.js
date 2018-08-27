@@ -20,7 +20,10 @@ import UserDetails from '../../UserDetails/UserDetails.js';
 import LoCCard from '../../LoCCard/LoCCard.js';
 import LoCApplyCard from '../../LoCCard/LoCApplyCard.js';
 import Config from '../../../utils/config';
+const { Company, Bill } = require('block-cnr');
 
+const company = new Company();
+const bill = new Bill();
 class BobPage extends Component {
   constructor(props) {
     super(props);
@@ -44,6 +47,7 @@ class BobPage extends Component {
       let eventInfo = JSON.parse(evt.data);
       eventInfo = eventInfo.$class.split('.').pop();
       this.getLetters();
+      this.getBills();
       if(eventInfo === 'CloseEvent') {
         this.setState({
           alert: true
@@ -60,6 +64,7 @@ class BobPage extends Component {
     // make rest calls
     this.getUserInfo();
     this.getLetters();
+    this.getBills();
   }
 
   componentWillUnmount() {
@@ -67,25 +72,26 @@ class BobPage extends Component {
   }
 
   getUserInfo() {
-    let userDetails = {};
-    let cURL = this.config.restServer.httpURL+'/Customer/bob';
-    axios.get(cURL)
-    .then(response => {
-      userDetails = response.data;
-    })
-    .then(() => {
-      let bankURL = this.config.restServer.httpURL+'/Bank/'+userDetails.bank.split('#')[1];
-      return axios.get(bankURL)
-    })
-    .then(response => {
-      userDetails.bank = response.data.name;
-      this.setState ({
-        userDetails: userDetails
+		let userDetails = {};
+
+    company.get()
+      .then(res => {
+        let data = res[1];
+        userDetails = {
+          companyName: data.companyName,
+          userName: data.userName,
+          bankName: data.bankAccount.bankName,
+          accountName: data.bankAccount.accountName,
+          accountNumber: data.bankAccount.accountNumber
+        };
+        document.title = data.userName;
+        this.setState ({
+          userDetails: userDetails
+        });
+      })
+      .catch(err => {
+        console.log(err);
       });
-    })
-    .catch(error => {
-      console.log(error);
-    });
   }
 
   getLetters() {
@@ -97,7 +103,7 @@ class BobPage extends Component {
       // only want to display the first 5 LOCs
       let activeLetters = response.data.slice(0,5);
       this.setState ({
-        letters: activeLetters,
+        // letters: activeLetters,
         gettingLetters: false
       });
     })
@@ -106,12 +112,24 @@ class BobPage extends Component {
     });
   }
 
+  getBills () {
+    bill.get()
+      .then(res => {
+        this.setState ({
+          bills: res
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
   generateCard(i) {
     // should only show LOCs that are ready for Bob to approve
-    if (this.state.letters[i].approval.includes('resource:org.example.loc.BankEmployee#ella')){
+    if (this.state.bills.length > 0){
       if(i < this.state.letters.length){
         return (
-          <LoCCard letter={this.state.letters[i]} callback={this.state.callback} pageType={"view"} user="bob"/>
+          <LoCCard bill={this.state.bills[i]} callback={this.state.callback} pageType={"view"} user="bob"/>
         );
       }
     } else {
@@ -141,16 +159,23 @@ class BobPage extends Component {
       return <Redirect push to={"/" + this.state.redirectTo} />;
     }
 
-		if(this.state.userDetails.name && !this.state.gettingLetters) {
-			let username = this.state.userDetails.name + ", Customer of " + this.state.userDetails.bank;
+		if(this.state.userDetails.companyName && !this.state.gettingLetters) {
+      let username = `[${this.state.userDetails.companyName}] ${this.state.userDetails.userName}`;
 
     	let cardsJSX = [];
-    	if(this.state.letters.length) {
-				for(let i = 0; i < this.state.letters.length; i++) {
+    	// if(this.state.letters.length) {
+			// 	for(let i = 0; i < this.state.letters.length; i++) {
+			// 		cardsJSX.push(this.generateCard(i));
+			// 	}
+			// 	cardsJSX.push(<div className="cardSpace">&nbsp;</div>);
+			// }
+
+      if(this.state.bills && this.state.bills.length) {
+				for(let i = 0; i < this.state.bills.length; i++) {
 					cardsJSX.push(this.generateCard(i));
 				}
 				cardsJSX.push(<div className="cardSpace">&nbsp;</div>);
-			}
+      }
 
       return (
         <div id="bobPageContainer" className="bobPageContainer">
@@ -158,13 +183,13 @@ class BobPage extends Component {
             <span className="bobUsername"> {username} </span>
           </div>
           <div class="bobWelcomeDiv">
-            <p id="welcomeMessage">Welcome back {this.state.userDetails.name}</p>
+          <p id="welcomeMessage"> {this.state.userDetails.userName}님 환영합니다! </p>
             <h1 id ="accountBalance">${this.getBalance().toLocaleString()}</h1>
             <Alert amount={this.getBalanceIncrease().toLocaleString(undefined, {minimumFractionDigits: 2})} show={this.state.alert}/>
           </div>
           <div id="infoDivBob" className="flexDiv infoDivBob">
             <div id="bobDetailsDiv" className="bobDetailsDiv">
-              <UserDetails name={this.state.userDetails.name} companyName={this.state.userDetails.companyName} IBAN={'US22 1234 5678 0101'} swiftCode={'EWBKUS22'}/>
+          <UserDetails userName={this.state.userDetails.userName} companyName={this.state.userDetails.companyName} bankName={this.state.userDetails.bankName} accountName={this.state.userDetails.accountName} accountNumber={this.state.userDetails.accountNumber}/>
             </div>
           </div>
           <div className="locDivBob">

@@ -19,9 +19,10 @@ import UserDetails from '../../UserDetails/UserDetails.js';
 import LoCCard from '../../LoCCard/LoCCard.js';
 import LoCApplyCard from '../../LoCCard/LoCApplyCard.js';
 import Config from '../../../utils/config';
-const { Company } = require('block-cnr');
+const { Company, Bill } = require('block-cnr');
 
 const company = new Company();
+const bill = new Bill();
 class AlicePage extends Component {
   constructor(props) {
 		super(props);
@@ -44,16 +45,18 @@ class AlicePage extends Component {
   }
 
 	componentDidMount() {
-		document.title = "Alice - Bank of Dinero";
+		// document.title = "";
 		// open a websocket
 		this.connection = new WebSocket(this.config.restServer.webSocketURL);
 		this.connection.onmessage = ((evt) => {
 			this.getLetters();
+      this.getBills();
 		});
 
 		// make rest calls
 		this.getUserInfo();
 		this.getLetters();
+    this.getBills();
 	}
 
 	componentWillUnmount() {
@@ -73,6 +76,7 @@ class AlicePage extends Component {
           accountName: data.bankAccount.accountName,
           accountNumber: data.bankAccount.accountNumber
         };
+        document.title = data.userName;
         this.setState ({
           userDetails: userDetails
         });
@@ -100,9 +104,21 @@ class AlicePage extends Component {
 		  });
 	}
 
+  getBills () {
+    bill.get()
+      .then(res => {
+        this.setState ({
+          bills: res
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
 	generateCard(i) {
 		return (
-        <LoCCard user="alice" letter={this.state.letters[i]} callback={this.state.callback} pageType={"view"}/>
+        <LoCCard user="alice" bill={this.state.bills[i]} callback={this.state.callback} pageType={"view"}/>
     );
 	}
 
@@ -115,12 +131,20 @@ class AlicePage extends Component {
       let username = `[${this.state.userDetails.companyName}] ${this.state.userDetails.userName}`;
 
     	let cardsJSX = [];
-    	if(this.state.letters.length) {
-				for(let i = 0; i < this.state.letters.length; i++) {
+    	// if(this.state.letters.length) {
+			// 	for(let i = 0; i < this.state.letters.length; i++) {
+			// 		cardsJSX.push(this.generateCard(i));
+			// 	}
+			// 	cardsJSX.push(<div className="cardSpace">&nbsp;</div>);
+			// }
+      // console.log(this.state.bills);
+      console.log(`-------`);
+      if(this.state.bills && this.state.bills.length) {
+				for(let i = 0; i < this.state.bills.length; i++) {
 					cardsJSX.push(this.generateCard(i));
 				}
 				cardsJSX.push(<div className="cardSpace">&nbsp;</div>);
-			}
+      }
 
 			return (
     		  <div id="alicePageContainer" className="alicePageContainer">

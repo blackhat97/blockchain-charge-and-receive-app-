@@ -61,44 +61,41 @@ class DetailsCard extends Component {
       case 'Person':
         jsx = (
           <div>
-            <span class="subheadingSpan, topHeading">NAME</span>
+            <span class="subheadingSpan, topHeading">회사명</span>
             <span class="subheadingSpan">{this.state.data[1]}</span>
-            <span class="subheadingSpan, topHeading">COMPANY NAME</span>
+            <span class="subheadingSpan, topHeading">직원명</span>
             <span class="subheadingSpan">{this.state.data[2]}</span>
-            <span class="subheadingSpan, topHeading">IBAN</span>
+            <span class="subheadingSpan, topHeading">은행명</span>
             <span class="subheadingSpan">{this.state.data[3]}</span>
-            <span class="subheadingSpan, topHeading">SWIFT CODE</span>
+            <span class="subheadingSpan, topHeading">예금주</span>
             <span class="subheadingSpan">{this.state.data[4]}</span>
-            <span class="subheadingSpan, topHeading">BANK NAME</span>
+            <span class="subheadingSpan, topHeading">계좌번호</span>
             <span class="subheadingSpan">{this.state.data[5]}</span>
           </div>
         );
         break;
       case 'Product':
-        let currency, amount;
-        if (this.props.user === 'alice' || this.props.user === 'matias') {
-          currency = '€';
-          amount = this.state.data[3];
-        } else {
-          currency = '$'
-          amount = this.state.data[3] * 1.15;
-        }
+      let currency, amount;
+      currency = '₩';
+      amount = this.state.data[3];
 
         jsx = (
-          <div>
-            <span class="subheadingSpan, topHeading">TYPE</span>
+            <div>
+            <span class="subheadingSpan, topHeading">청구 회사 선택</span>
             { (this.state.editable) ? <input class="subheadingSpan" type="text" onChange={this.handleChange.bind(this, 1)} defaultValue={this.state.data[1]} /> : <span class="subheadingSpan">{this.state.data[1]}</span> }
-            <span class="subheadingSpan, topHeading">QUANTITY</span>
+            <span class="subheadingSpan, topHeading">물품</span>
+            { (this.state.editable) ? <input class="subheadingSpan" type="text" onChange={this.handleChange.bind(this, 1)} defaultValue={this.state.data[1]} /> : <span class="subheadingSpan">{this.state.data[1]}</span> }
+            <span class="subheadingSpan, topHeading">수량</span>
             { (this.state.editable) ? <input class="subheadingSpan" type="number" min="0" onChange={this.handleChange.bind(this, 2)} defaultValue={this.state.data[2]} /> : <span class="subheadingSpan">{this.state.data[2] ? this.state.data[2] : "0"}</span> }
-            <span class="subheadingSpan, topHeading">PRICE PER UNIT</span>
-            { (this.state.editable) ? <input class="subheadingSpan" type="number" min="0" onChange={this.handleChange.bind(this, 3)} defaultValue={this.state.data[3]} /> : <span class="subheadingSpan">{currency + (this.state.data[3] ? amount.toLocaleString(undefined, {minimumFractionDigits: 2}) : "0.00")}</span> }
-            <span class="subheadingSpan, topHeading">TOTAL</span>
-            <span class="subheadingSpan">{currency + (this.state.data[2]*amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+            <span class="subheadingSpan, topHeading">가격(개당)</span>
+            { (this.state.editable) ? <input class="subheadingSpan" type="number" min="0" onChange={this.handleChange.bind(this, 3)} defaultValue={this.state.data[3]} /> : <span class="subheadingSpan">{currency + (this.state.data[3] ? amount.toLocaleString() : "0")}</span> }
+            <span class="subheadingSpan, topHeading">총액</span>
+            <span class="subheadingSpan">{currency + (this.state.data[2]*amount).toLocaleString()}</span>
           </div>
         );
         break;
       case 'Rules':
-        mainHeadingTxt = "Terms of Letter of Credit";
+        mainHeadingTxt = "거래명세서 이용약관";
         if(this.state.editable) {
           jsx = (
             <ul>
@@ -120,7 +117,7 @@ class DetailsCard extends Component {
         break;
     }
 
-    let buttonTxt = this.state.editable ? "Save" : "Edit";
+    let buttonTxt = this.state.editable ? "저장" : "수정";
     let editButtonStyle = this.state.editable ? { float: 'right' } : {};
     let styles = this.props.type === 'Rules' ? "outerDiv rules" : "outerDiv"; 
     

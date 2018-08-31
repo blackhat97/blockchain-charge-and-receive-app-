@@ -59,3 +59,12 @@ transaction AddCompany {
   o String accountName
   o String accountNumber
 }
+
+transaction UpdateCompany {
+  o String companyId
+  o String companyName
+  o String userName
+  o String bankName
+  o String accountName
+  o String accountNumber
+}

@@ -24,10 +24,11 @@ import backButtonIcon from '../../resources/images/left-arrow.svg'
 import Stepper from '../../components/Stepper/Stepper.js';
 import Modal from '../../components/Modal/Modal.js'
 const _ = require('lodash');
-const { Company, Bill } = require('block-cnr');
+const { Company, Bill, Charge } = require('block-cnr');
 
 const company = new Company();
 const bill = new Bill();
+const charge = new Charge();
 
 class LetterOfCredit extends Component {
   constructor(props) {
@@ -61,6 +62,7 @@ class LetterOfCredit extends Component {
       company: this.props.company,
       user: this.props.match.params.name,
       billId: this.props.match.params.id,
+      bill: {},
       userDetails: {},
       sourceDetails: {},
       targetDetails: {},
@@ -125,10 +127,11 @@ class LetterOfCredit extends Component {
       bill.get()
         .then(res => {
           let data = res.filter(elem => elem.billId == this.state.billId)[0];
-          console.log(data);
-          this.setState ({
-            bill: data
-          });
+          if (_.isObject(data)){
+            this.setState ({
+              bill: data
+            });
+          }
         })
         .catch(err => {
           console.log(err);
@@ -197,44 +200,54 @@ class LetterOfCredit extends Component {
 
   showModal(tx) {
     // work out what transaction will be made if the yes button is clicked
-    const txTypes = {
-      YES: "YES",
-      NO: "NO",
-      DEPENDING: "DEPENDING"
+    let callback;
+    if (tx == 'CHARGE') {
+      callback = () => {
+        this.hideModal();
+      }
+      this.Charge(this.state.bill.items);
     }
 
-    let callback;
-    if (tx === 'YES') {
-      callback = () => {
-        this.hideModal();
-        this.createLOC(this.props.productDetails.type, this.props.productDetails.quantity, this.props.productDetails.pricePerUnit, this.props.rules)
-      };
-    } else if (tx === txTypes.APPROVE) {
-      callback = () => {
-        this.hideModal();
-        this.approveLOC(this.state.letter.letterId, this.state.user)
-      };
-    } else if (tx === txTypes.REJECT) {
-      callback = () => {
-        this.hideModal();
-        this.rejectLOC(this.state.letter.letterId)
-      }
-    } else if (tx === txTypes.PAY) {
-      callback = () => {
-        this.hideModal();
-        this.payLOC(this.state.letter.letterId)
-      }
-    } else {
-      callback = () => {
-        this.hideModal();
-        this.closeLOC(this.state.letter.letterId)
-      }
-    }
+    // if (tx === 'YES') {
+    //   callback = () => {
+    //     this.hideModal();
+    //     this.charge(this.props.productDetails.type, this.props.productDetails.quantity, this.props.productDetails.pricePerUnit, this.props.rules)
+    //   };
+    // } else if (tx === txTypes.APPROVE) {
+    //   callback = () => {
+    //     this.hideModal();
+    //     this.approveLOC(this.state.letter.letterId, this.state.user)
+    //   };
+    // } else if (tx === txTypes.REJECT) {
+    //   callback = () => {
+    //     this.hideModal();
+    //     this.rejectLOC(this.state.letter.letterId)
+    //   }
+    // } else if (tx === txTypes.PAY) {
+    //   callback = () => {
+    //     this.hideModal();
+    //     this.payLOC(this.state.letter.letterId)
+    //   }
+    // } else {
+    //   callback = () => {
+    //     this.hideModal();
+    //     this.closeLOC(this.state.letter.letterId)
+    //   }
+    // }
 
     this.setState({
       showModal: true,
       modalType: tx,
       modalFunction: callback
+    });
+  }
+
+  Charge (items) {
+    charge.Charge({
+      source: "0",
+      target: "1",
+      items: items,
+      paymentDate: "2018-09-26"
     });
   }
 
@@ -392,6 +405,7 @@ class LetterOfCredit extends Component {
     }
 
     if (_.isString(_.get(this.state, 'sourceDetails.companyName')) && (_.isString(_.get(this.state, 'bill.billId')) || this.state.billId=='create')) {
+      let isCreate = this.state.billId == 'create';
       let activeStep = 0;
       switch (_.get(this.state, 'bill.confirmStatus')) {
       case 'YES':
@@ -448,7 +462,7 @@ class LetterOfCredit extends Component {
       } else {
         buttonJSX = (
             <div class="actions">
-            <button disabled={this.state.disableButtons || this.props.productDetails.type === "" || this.props.productDetails.quantity === 0 || this.props.productDetails.pricePerUnit === 0} onClick={() => {this.showModal('CREATE')}}>청구 하기</button>
+            <button disabled={false} onClick={() => {this.showModal('CHARGE')}}>청구 하기</button>
             </div>
         );
       }
@@ -458,8 +472,6 @@ class LetterOfCredit extends Component {
       else username += ' - 지급인';
 
       if (!this.state.disableButtons) {
-        console.log(`---------`);
-        console.log(this.state.sourceDetails);
         return (
             <div class="LCcontainer">
             <Modal show={this.state.showModal} modalType={this.state.modalType} user={this.state.user} cancelCallback={()=>{this.hideModal()}} yesCallback={this.state.modalFunction}/>
@@ -478,7 +490,7 @@ class LetterOfCredit extends Component {
             <tr>
             <td> <DetailsCard disabled={true} type="Person" title="청구사 정보" data={this.state.sourceDetails}/> </td>
             <td> <DetailsCard disabled={true} type="Person" title="지급사 정보" data={this.state.targetDetails}/> </td>
-            <td> <DetailsCard type="Product" title="물품 상세" data={this.state.bill} canEdit={this.state.isApply} user={this.state.user}/> </td>
+            <td> <DetailsCard type="Product" title="물품 상세" isCreate={isCreate} data={this.state.bill} canEdit={this.state.isApply} user={this.state.user}/> </td>
             <td className="blockchainCell" rowspan="2"> <BlockChainDisplay transactions={this.state.transactions}/> </td>
             </tr>
             <tr>

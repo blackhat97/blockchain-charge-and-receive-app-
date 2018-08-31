@@ -229,6 +229,30 @@ class Company extends ParticipantManager {
     return newId;
   }
 
+  async update (companyId, obj) {
+    const factory = getFactory();
+    let company = await this.getData(companyId);
+    if (typeof(company) !== 'object') throw new Error(`${companyId}에 해당하는 Bill 데이터가 없습니다.`);
+    obj = Object.assign({
+      companyName: company.companyName,
+      userName: company.userName,
+      bankName: company.bankAccount.bankName,  
+      accountName: company.bankAccount.accountName,
+      accountNumber: company.bankAccount.accountNumber
+    }, obj);
+    
+    company.companyName = obj.companyName;
+    company.userName = obj.userName;
+    let bankAccount = await factory.newConcept(NAMESPACE, 'BankAccount');
+    bankAccount.bankName = obj.bankName;
+    bankAccount.accountName = obj.accountName;
+    bankAccount.accountNumber = obj.accountNumber;
+    company.bankAccount = bankAccount;
+    const pRegistry = await getParticipantRegistry(company.getFullyQualifiedType());
+    await pRegistry.update(company);
+    return companyId;
+  }
+
   async getId (pName) {
     let data = await this.getList();
     let filtered = data.filter(elem => elem['companyName'] == pName);
@@ -333,6 +357,23 @@ async function Confirm (tx) {
 async function AddCompany (tx) {
   let company = new Company();
   let companyId = await company.new({
+    companyName: tx.companyName,
+    userName: tx.userName,
+    bankName: tx.bankName,
+    accountName: tx.accountName,
+    accountNumber: tx.accountNumber
+  });
+  return companyId;
+}
+
+/**
+ * Update new company
+ * @param {org.blockchain.cnr_network.UpdateCompany} UpdateCompany - the UpdateCompany transaction
+ * @transaction
+ */
+async function UpdateCompany (tx) {
+  let company = new Company();
+  let companyId = await company.update(tx.companyId, {
     companyName: tx.companyName,
     userName: tx.userName,
     bankName: tx.bankName,

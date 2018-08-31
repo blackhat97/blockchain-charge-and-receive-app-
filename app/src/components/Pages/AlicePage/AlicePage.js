@@ -138,7 +138,6 @@ class AlicePage extends Component {
 			// 	cardsJSX.push(<div className="cardSpace">&nbsp;</div>);
 			// }
       // console.log(this.state.bills);
-      console.log(`-------`);
       if(this.state.bills && this.state.bills.length) {
 				for(let i = 0; i < this.state.bills.length; i++) {
 					cardsJSX.push(this.generateCard(i));

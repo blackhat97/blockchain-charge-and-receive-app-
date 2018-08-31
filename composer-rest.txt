@@ -1,0 +1,22 @@
+- Charge
+{
+  "$class": "org.blockchain.cnr_network.Charge",
+  "source": "0",
+  "target": "1",
+  "items": [{"name": "1월 학원비", "price": 100000, "quantity": 1, "remain": 1}],
+  "paymentDate": "2018-09-25",
+  "timestamp": "2018-08-28T12:09:47.701Z"
+}
+- Confirm
+{
+  "$class": "org.blockchain.cnr_network.Confirm",
+  "billId": "1",
+  "confirmStatus": "DEPENDING",
+  "timestamp": "2018-08-28T12:09:47.735Z"
+}
+{
+  "$class": "org.blockchain.cnr_network.Confirm",
+  "billId": "1",
+  "confirmStatus": "YES",
+  "timestamp": "2018-08-28T12:09:47.735Z"
+}

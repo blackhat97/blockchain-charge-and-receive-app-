@@ -55,7 +55,7 @@ class AlicePage extends Component {
 
 		// make rest calls
 		this.getUserInfo();
-		this.getLetters();
+		// this.getLetters();
     this.getBills();
 	}
 

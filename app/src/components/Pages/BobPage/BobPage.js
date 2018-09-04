@@ -46,7 +46,7 @@ class BobPage extends Component {
     this.connection.onmessage = ((evt) => {
       let eventInfo = JSON.parse(evt.data);
       eventInfo = eventInfo.$class.split('.').pop();
-      this.getLetters();
+      // this.getLetters();
       this.getBills();
       if(eventInfo === 'CloseEvent') {
         this.setState({
@@ -63,7 +63,7 @@ class BobPage extends Component {
 
     // make rest calls
     this.getUserInfo();
-    this.getLetters();
+    // this.getLetters();
     this.getBills();
   }
 
